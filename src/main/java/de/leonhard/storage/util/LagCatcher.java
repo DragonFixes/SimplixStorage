@@ -3,9 +3,10 @@ package de.leonhard.storage.util;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import de.leonhard.storage.logger.LoggerInfo;
 import lombok.experimental.UtilityClass;
 import lombok.val;
-import lombok.var;
 
 /**
  * Utility Class to take benchmarks
@@ -42,7 +43,7 @@ public class LagCatcher {
     val value2 = LagCatcher.stopTimes.get(name);
     if (value2 != null) {
       val took = value2 - value;
-      System.out.println(
+      LoggerInfo.getLogger().printMessage(
           (Object)
               (
                   "Test '"
@@ -69,7 +70,7 @@ public class LagCatcher {
       runnable.run();
       nanosTook += System.nanoTime() - nanoTime;
     }
-    System.out.println(
+    LoggerInfo.getLogger().printMessage(
         (Object)
             (
                 "Average time: "
@@ -77,7 +78,7 @@ public class LagCatcher {
                 + " micros - "
                 + TimeUnit.NANOSECONDS.toMillis(nanosTook / cycles)
                 + " ms."));
-    System.out.println(
+    LoggerInfo.getLogger().printMessage(
         (Object)
             (
                 "Test took: "

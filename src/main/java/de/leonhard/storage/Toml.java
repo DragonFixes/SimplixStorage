@@ -5,6 +5,7 @@ import de.leonhard.storage.internal.FileType;
 import de.leonhard.storage.internal.FlatFile;
 import de.leonhard.storage.internal.editor.toml.TomlManager;
 import de.leonhard.storage.internal.settings.ReloadSettings;
+import de.leonhard.storage.logger.LoggerInfo;
 import de.leonhard.storage.util.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -70,9 +71,9 @@ public class Toml extends FlatFile {
     try {
       TomlManager.write(data.toMap(), getFile());
     } catch (final IOException ioException) {
-      System.err.println("Exception while writing fileData to file '" + getName() + "'");
-      System.err.println("In '" + FileUtils.getParentDirPath(this.file) + "'");
-      ioException.printStackTrace();
+      LoggerInfo.getLogger().printMessage("Exception while writing fileData to file '" + getName() + "'");
+      LoggerInfo.getLogger().printMessage("In '" + FileUtils.getParentDirPath(this.file) + "'");
+      LoggerInfo.getLogger().printStackTrace(ioException);
     }
   }
 }

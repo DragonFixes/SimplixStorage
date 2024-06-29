@@ -1,5 +1,6 @@
 package de.leonhard.storage.internal;
 
+import de.leonhard.storage.logger.LoggerInfo;
 import de.leonhard.storage.annotation.ConfigPath;
 import de.leonhard.storage.internal.provider.SimplixProviders;
 import de.leonhard.storage.internal.settings.DataType;
@@ -123,9 +124,9 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     final String fileName = this.fileType == null
         ? "File"
         : this.fileType.name().toLowerCase(); // fileType might be null
-    System.err.println("Exception reloading " + fileName + " '" + getName() + "'");
-    System.err.println("In '" + FileUtils.getParentDirPath(this.file) + "'");
-    ioException.printStackTrace();
+    LoggerInfo.getLogger().printMessage("Exception reloading " + fileName + " '" + getName() + "'");
+    LoggerInfo.getLogger().printMessage("In '" + FileUtils.getParentDirPath(this.file) + "'");
+    LoggerInfo.getLogger().printStackTrace(ioException);
   }
   // ----------------------------------------------------------------------------------------------------
   // Overridden methods from DataStorage
@@ -279,9 +280,9 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     try {
       write(this.fileData);
     } catch (final IOException ex) {
-      System.err.println("Exception writing to file '" + getName() + "'");
-      System.err.println("In '" + FileUtils.getParentDirPath(this.file) + "'");
-      ex.printStackTrace();
+      LoggerInfo.getLogger().printMessage("Exception writing to file '" + getName() + "'");
+      LoggerInfo.getLogger().printMessage("In '" + FileUtils.getParentDirPath(this.file) + "'");
+      LoggerInfo.getLogger().printStackTrace(ex);
     }
     this.lastLoaded = System.currentTimeMillis();
   }
@@ -331,14 +332,11 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   // Should the file be re-read before the next get() operation?
   // Can be used as utility method for implementations of FlatFile
   protected boolean shouldReload() {
-    switch (this.reloadSettings) {
-      case AUTOMATICALLY:
-        return true;
-      case INTELLIGENT:
-        return FileUtils.hasChanged(this.file, this.lastLoaded);
-      default:
-        return false;
-    }
+      return switch (this.reloadSettings) {
+          case AUTOMATICALLY -> true;
+          case INTELLIGENT -> FileUtils.hasChanged(this.file, this.lastLoaded);
+          default -> false;
+      };
   }
 
   // ----------------------------------------------------------------------------------------------------

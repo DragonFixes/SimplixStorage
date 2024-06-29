@@ -1,5 +1,6 @@
 package de.leonhard.storage.util;
 
+import de.leonhard.storage.logger.LoggerInfo;
 import de.leonhard.storage.internal.provider.SimplixProviders;
 import lombok.*;
 import lombok.experimental.UtilityClass;
@@ -8,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
@@ -19,6 +21,7 @@ import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -255,21 +258,22 @@ public class FileUtils {
     @Cleanup val zipOutputStream = new ZipOutputStream(createOutputStream(fileTo));
     val pathFrom = Paths.get(new File(sourceDirectory).toURI());
 
-    Files.walk(pathFrom)
-        .filter(path -> !Files.isDirectory(path))
-        .forEach(
-            path -> {
-               val zipEntry = new ZipEntry(pathFrom.relativize(path).toString());
+    try (Stream<Path> walk = Files.walk(pathFrom)) {
+      walk.filter(path -> ! Files.isDirectory(path))
+              .forEach(
+                      path -> {
+                        val zipEntry = new ZipEntry(pathFrom.relativize(path).toString());
 
-              try {
-                zipOutputStream.putNextEntry(zipEntry);
+                        try {
+                          zipOutputStream.putNextEntry(zipEntry);
 
-                Files.copy(path, zipOutputStream);
-                zipOutputStream.closeEntry();
-              } catch (final IOException ex) {
-                ex.printStackTrace();
-              }
-            });
+                          Files.copy(path, zipOutputStream);
+                          zipOutputStream.closeEntry();
+                        } catch (final IOException ex) {
+                          LoggerInfo.getLogger().printStackTrace(ex);
+                        }
+                      });
+    }
   }
 
   // ----------------------------------------------------------------------------------------------------

@@ -10,6 +10,7 @@ import de.leonhard.storage.internal.editor.yaml.YamlParser;
 import de.leonhard.storage.internal.settings.ConfigSettings;
 import de.leonhard.storage.internal.settings.DataType;
 import de.leonhard.storage.internal.settings.ReloadSettings;
+import de.leonhard.storage.logger.LoggerInfo;
 import de.leonhard.storage.util.FileUtils;
 
 import java.io.File;
@@ -133,7 +134,7 @@ public class Yaml extends FlatFile {
 
       write();
     } catch (final Exception ex) {
-      ex.printStackTrace();
+      LoggerInfo.getLogger().printStackTrace(ex);
     }
 
     return this;
