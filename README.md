@@ -2,7 +2,30 @@
 # SimplixStorage
 SimplixStorage - A Library to store data in a better way.
 
-[![](https://jitpack.io/v/simplix-softworks/simplixstorage.svg)](https://jitpack.io/#simplix-softworks/simplixstorage) [![Discord](https://img.shields.io/discord/752533664696369204?label=Discord)](https://discord.simplixsoft.com/) ![GitHub](https://img.shields.io/github/license/Simplix-Softworks/SimplixStorage)
+[![](https://jitpack.io/v/nobeld/simplixstorage.svg)](https://jitpack.io/#nobeld/simplixstorage) [![ProjectDiscord](https://img.shields.io/discord/1183966936116240454?label=ProjectDiscord)](https://sandbox.nobeld.me/) ![GitHub](https://img.shields.io/github/license/NobelD/SimplixStorage)<br>
+[![SimplixDiscord](https://img.shields.io/discord/752533664696369204?label=SimplixDiscord&color=yellow)](https://discord.simplixsoft.com/)
+
+## About this fork
+If you use this version ask me first about any issue before going to the original resource.<br>
+This fork contains a few fixes and some extra options to the library.
+
+
+```kotlin
+    repositories {
+            mavenCentral()
+            maven {
+                url = "https://jitpack.io"
+                //includeGroup = "com.github.NobelD"
+            }
+    }
+
+	dependencies {
+            // Short form
+            implementation("me.nobeld:SimplixStorage:{VERSION}")
+            // If the upper one does not work
+            implementation("com.github.NobelD:SimplixStorage:{VERSION}")
+	}
+```
 
 ## Overview
 Do you want to save your config files easily and **independently** from Bukkit or BungeeCord?<br>
