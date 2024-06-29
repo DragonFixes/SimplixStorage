@@ -202,13 +202,15 @@ public class FileUtils {
     }
   }
 
-  public void writeToFile(
+  public boolean writeToFile(
       @NonNull final File file,
       @NonNull final InputStream inputStream) {
+    boolean exists = false;
     try (val outputStream = new FileOutputStream(file)) {
       if (!file.exists()) {
         Files.copy(inputStream, file.toPath());
       } else {
+        exists = true;
         val data = new byte[8192];
         int count;
         while ((count = inputStream.read(data, 0, 8192)) != -1) {
@@ -221,6 +223,7 @@ public class FileUtils {
           "Error while writing InputStream to '" + file.getName() + "'.",
           "In: '" + getParentDirPath(file) + "'");
     }
+    return exists;
   }
 
   private byte[] readAllBytes(@NonNull final File file) {

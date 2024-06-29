@@ -27,12 +27,17 @@ public enum DataType {
   private static final MapProvider mapProvider = SimplixProviders.mapProvider();
 
   public static DataType forConfigSetting(final ConfigSettings configSettings) {
-    // Only Configs needs the preservation of the order of the keys
-    if (ConfigSettings.PRESERVE_COMMENTS.equals(configSettings)) {
-      return SORTED;
+    if (configSettings == null) return UNSORTED;
+    switch (configSettings) {
+      // Only Configs needs the preservation of the order of the keys
+      case PRESERVE_COMMENTS, FIRST_TIME -> {
+          return SORTED;
+      }
+      // In all other cases using the normal HashMap is better to save memory.
+      default -> {
+          return UNSORTED;
+      }
     }
-    // In all other cases using the normal HashMap is better to save memory.
-    return UNSORTED;
   }
 
   public Map<String, Object> getMapImplementation() {

@@ -36,6 +36,7 @@ public class Yaml extends FlatFile {
   protected final YamlParser parser;
   @Setter
   private ConfigSettings configSettings = ConfigSettings.SKIP_COMMENTS;
+  private boolean exists = false;
 
   public Yaml(@NonNull final Yaml yaml) {
     super(yaml.getFile());
@@ -46,6 +47,7 @@ public class Yaml extends FlatFile {
     this.inputStream = yaml.getInputStream().orElse(null);
     this.pathPrefix = yaml.getPathPrefix();
     this.reloadConsumer = yaml.getReloadConsumer();
+    this.exists = true;
   }
 
   public Yaml(final String name, @Nullable final String path) {
@@ -78,7 +80,7 @@ public class Yaml extends FlatFile {
     this.inputStream = inputStream;
 
     if (create() && inputStream != null) {
-      FileUtils.writeToFile(this.file, inputStream);
+      exists = FileUtils.writeToFile(this.file, inputStream);
     }
 
     this.yamlEditor = new YamlEditor(this.file);
@@ -152,15 +154,19 @@ public class Yaml extends FlatFile {
 
   @Override
   protected void write(final FileData data) throws IOException {
-    // If Comments shouldn't be preserved
-    if (!ConfigSettings.PRESERVE_COMMENTS.equals(this.configSettings)) {
+
+    if (ConfigSettings.PRESERVE_COMMENTS == this.configSettings ||
+            (ConfigSettings.FIRST_TIME == this.configSettings && !exists)) {
+      exists = true;
+      val unEdited = this.yamlEditor.read();
       write0(this.fileData);
+      this.yamlEditor.write(this.parser.parseLines(unEdited, this.yamlEditor.readKeys()));
       return;
     }
 
-    val unEdited = this.yamlEditor.read();
+    // If Comments shouldn't be preserved.
     write0(this.fileData);
-    this.yamlEditor.write(this.parser.parseLines(unEdited, this.yamlEditor.readKeys()));
+
   }
 
   // Writing without comments
