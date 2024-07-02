@@ -15,7 +15,8 @@ This fork contains a few fixes and some extra options to the library.
             mavenCentral()
             maven {
                 url = "https://jitpack.io"
-                //includeGroup = "com.github.NobelD"
+                //includeGroup = "me.nobeld"
+                //includeGroup = "com.github.nobeld"
             }
     }
 
