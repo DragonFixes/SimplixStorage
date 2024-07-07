@@ -2,7 +2,10 @@ package de.leonhard.storage.sections;
 
 import de.leonhard.storage.internal.DataStorage;
 import de.leonhard.storage.internal.FlatFile;
+
 import java.util.Set;
+import java.util.function.Function;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -59,6 +62,10 @@ public class FlatFileSection implements DataStorage {
   @Override
   public <E extends Enum<E>> E getEnum(String key, Class<E> enumType) {
     return flatFile.getEnum(createFinalKey(key), enumType);
+  }
+  @Override
+  public <E extends Enum<E>> E getEnum(String key, Class<E> enumType, Function<String, String> mapper) {
+    return flatFile.getEnum(createFinalKey(key), enumType, mapper);
   }
 
   private String createFinalKey(final String key) {

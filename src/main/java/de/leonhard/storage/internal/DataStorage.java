@@ -8,6 +8,7 @@ import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public interface DataStorage {
@@ -98,10 +99,10 @@ public interface DataStorage {
    *
    * @param key Path to value in data-structure
    * @param def Default value & type of it
+   * @see #getOrDefault(String, Object)
    */
   default <T> T get(final String key, final T def) {
-    final Object raw = get(key);
-    return raw == null ? def : ClassWrapper.getFromDef(raw, def);
+    return getOrDefault(key, def);
   }
 
   /**
@@ -229,7 +230,8 @@ public interface DataStorage {
    * @param key      Path to Enum
    * @param enumType Class of the Enum
    * @param <E>      EnumType
-   * @return Serialized Enum
+   * @return Serialized
+   * @throws IllegalArgumentException if no enum match
    */
   default <E extends Enum<E>> E getEnum(
       final String key,
@@ -239,6 +241,67 @@ public interface DataStorage {
         object instanceof String,
         "No usable Enum-Value found for '" + key + "'.");
     return Enum.valueOf(enumType, (String) object);
+  }
+
+  /**
+   * Serialize an Enum from entry in the data-structure
+   *
+   * @param key      Path to Enum
+   * @param enumType Class of the Enum
+   * @param <E>      EnumType
+   * @return Serialized Enum
+   */
+  default <E extends Enum<E>> Optional<E> findEnum(
+          final String key,
+          final Class<E> enumType) {
+    try {
+      return Optional.of(getEnum(key, enumType));
+    } catch (IllegalArgumentException e) {
+      return Optional.empty();
+    }
+  }
+
+  /**
+   * Serialize an Enum from entry in the data-structure<br>
+   * Uses an extra mapper to skip simple scenarios (like capitalization)
+   *
+   * @param key      Path to Enum
+   * @param enumType Class of the Enum
+   * @param mapper   Mapper for some simple scenarios
+   * @param <E>      EnumType
+   * @throws IllegalArgumentException if no enum match
+   * @return Serialized Enum
+   */
+  default <E extends Enum<E>> E getEnum(
+          final String key,
+          final Class<E> enumType,
+          final Function<String, String> mapper) {
+    final Object object = get(key);
+    Valid.checkBoolean(
+            object instanceof String,
+            "No usable Enum-Value found for '" + key + "'.");
+    return Enum.valueOf(enumType, mapper.apply((String) object));
+  }
+
+  /**
+   * Serialize an Enum from entry in the data-structure<br>
+   * Uses an extra mapper to skip simple scenarios (like capitalization)
+   *
+   * @param key      Path to Enum
+   * @param enumType Class of the Enum
+   * @param mapper   Mapper for some simple scenarios
+   * @param <E>      EnumType
+   * @return Serialized Enum
+   */
+  default <E extends Enum<E>> Optional<E> findEnum(
+          final String key,
+          final Class<E> enumType,
+          final Function<String, String> mapper) {
+    try {
+      return Optional.of(getEnum(key, enumType, mapper));
+    } catch (IllegalArgumentException e) {
+      return Optional.empty();
+    }
   }
 
   /**
