@@ -71,6 +71,23 @@ public interface DataStorage {
   }
 
   /**
+   * Method to get a value of a predefined type from our data structure will return {@link
+   * Optional#empty()} if the value wasn't found.<br>
+   * The type is only used to get the class.
+   *
+   * @param key  Key to search the value for
+   * @param type Type of the value
+   */
+  default <T> Optional<T> find(final String key, final T type) {
+    final Object raw = get(key);
+    //Key wasn't found
+    if (raw == null) {
+      return Optional.empty();
+    }
+    return Optional.of(ClassWrapper.getFromDef(raw, type));
+  }
+
+  /**
    * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
    * your serializable in the {@link SimplixSerializer} before.
    *
@@ -262,8 +279,8 @@ public interface DataStorage {
   }
 
   /**
-   * Serialize an Enum from entry in the data-structure<br>
-   * Uses an extra mapper to skip simple scenarios (like capitalization)
+   * Serialize an Enum from entry in the data-structure.<br>
+   * Uses an extra mapper to skip simple scenarios. (like capitalization)
    *
    * @param key      Path to Enum
    * @param enumType Class of the Enum
@@ -284,8 +301,8 @@ public interface DataStorage {
   }
 
   /**
-   * Serialize an Enum from entry in the data-structure<br>
-   * Uses an extra mapper to skip simple scenarios (like capitalization)
+   * Serialize an Enum from entry in the data-structure.<br>
+   * Uses an extra mapper to skip simple scenarios. (like capitalization)
    *
    * @param key      Path to Enum
    * @param enumType Class of the Enum
@@ -305,8 +322,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to serialize a Class using the {@link SimplixSerializer}. You will need to register
-   * your serializable in the {@link SimplixSerializer} before.
+   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializer} before.
    *
    * @return Serialized instance of class.
    */
