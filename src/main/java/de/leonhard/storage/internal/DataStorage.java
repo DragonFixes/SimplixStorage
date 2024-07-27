@@ -1,5 +1,6 @@
 package de.leonhard.storage.internal;
 
+import de.leonhard.storage.internal.exceptions.SimplixValidationException;
 import de.leonhard.storage.internal.provider.SimplixProviders;
 import de.leonhard.storage.internal.serialize.SimplixSerializer;
 import de.leonhard.storage.util.ClassWrapper;
@@ -60,6 +61,7 @@ public interface DataStorage {
    *
    * @param key  Key to search the value for
    * @param type Type of the value
+   * @throws ClassCastException if the type is not valid
    */
   default <T> Optional<T> find(final String key, final Class<T> type) {
     final Object raw = get(key);
@@ -77,6 +79,7 @@ public interface DataStorage {
    *
    * @param key  Key to search the value for
    * @param type Type of the value
+   * @throws ClassCastException if the type is not valid
    */
   default <T> Optional<T> find(final String key, final T type) {
     final Object raw = get(key);
@@ -93,6 +96,7 @@ public interface DataStorage {
    *
    * @param key   The key your value should be associated with.
    * @param value The value you want to set in your data-structure.
+   * @throws SimplixValidationException if an error is found
    */
   default <T> void setSerializable(@NonNull final String key, @NonNull final T value) {
     try {
@@ -201,6 +205,7 @@ public interface DataStorage {
    *
    * @param key Path to List in data structure.
    */
+  @NonNull
   default List<?> getList(final String key) {
     return getOrDefault(key, new ArrayList<>());
   }
@@ -209,26 +214,32 @@ public interface DataStorage {
    * Attempts to get a List of the given type
    * @param key Path to List in data structure.
    */
+  @NonNull
   default <T> List<T> getListParameterized(final String key) {
     return getOrSetDefault(key, new ArrayList<>());
   }
 
+  @NonNull
   default List<String> getStringList(final String key) {
     return getOrDefault(key, new ArrayList<>());
   }
 
+  @NonNull
   default List<Integer> getIntegerList(final String key) {
     return getOrDefault(key, new ArrayList<String>()).stream().map(Integer::parseInt).collect(Collectors.toList());
   }
 
+  @NonNull
   default List<Byte> getByteList(final String key) {
     return getOrDefault(key, new ArrayList<String>()).stream().map(Byte::parseByte).collect(Collectors.toList());
   }
 
+  @NonNull
   default List<Long> getLongList(final String key) {
     return getOrDefault(key, new ArrayList<String>()).stream().map(Long::parseLong).collect(Collectors.toList());
   }
 
+  @NonNull
   default Map<?, ?> getMap(final String key) {
     return getOrDefault(key, new HashMap<>());
   }
@@ -237,6 +248,7 @@ public interface DataStorage {
    * Attempts to get a map of the given type
    * @param key Path to the Map in the data-structure
    */
+  @NonNull
   default <K, V> Map<K, V> getMapParameterized(final String key) {
     return getOrSetDefault(key, new HashMap<>());
   }
@@ -250,6 +262,7 @@ public interface DataStorage {
    * @return Serialized
    * @throws IllegalArgumentException if no enum match
    */
+  @NonNull
   default <E extends Enum<E>> E getEnum(
       final String key,
       final Class<E> enumType) {
@@ -271,11 +284,13 @@ public interface DataStorage {
   default <E extends Enum<E>> Optional<E> findEnum(
           final String key,
           final Class<E> enumType) {
-    try {
-      return Optional.of(getEnum(key, enumType));
-    } catch (IllegalArgumentException e) {
+    final Object object = get(key);
+    if (object == null)
       return Optional.empty();
-    }
+    Valid.checkBoolean(
+            object instanceof String,
+            "No usable Enum-Value found for '" + key + "'.");
+    return Optional.of(Enum.valueOf(enumType, (String) object));
   }
 
   /**
@@ -289,6 +304,7 @@ public interface DataStorage {
    * @throws IllegalArgumentException if no enum match
    * @return Serialized Enum
    */
+  @NonNull
   default <E extends Enum<E>> E getEnum(
           final String key,
           final Class<E> enumType,
@@ -314,11 +330,54 @@ public interface DataStorage {
           final String key,
           final Class<E> enumType,
           final Function<String, String> mapper) {
-    try {
-      return Optional.of(getEnum(key, enumType, mapper));
-    } catch (IllegalArgumentException e) {
+    final Object object = get(key);
+    if (object == null)
       return Optional.empty();
-    }
+    Valid.checkBoolean(
+            object instanceof String,
+            "No usable Enum-Value found for '" + key + "'.");
+    return Optional.of(Enum.valueOf(enumType, mapper.apply((String) object)));
+  }
+
+  /**
+   * Serialize an Enum from entry in the data-structure.<br>
+   * Uses a transformer to get the enum.
+   *
+   * @param key         Path to Enum
+   * @param transformer Transformer to enum
+   * @param <E>         EnumType
+   * @throws IllegalArgumentException if no enum match
+   * @return Serialized Enum
+   */
+  default <E extends Enum<E>> E getEnum(
+          final String key,
+          final Function<String, E> transformer) {
+    final Object object = get(key);
+    Valid.checkBoolean(
+            object instanceof String,
+            "No usable Enum-Value found for '" + key + "'.");
+    return transformer.apply((String) object);
+  }
+
+  /**
+   * Serialize an Enum from entry in the data-structure.<br>
+   * Uses a transformer to get the enum.
+   *
+   * @param key         Path to Enum
+   * @param transformer Transformer to enum
+   * @param <E>         EnumType
+   * @return Serialized Enum
+   */
+  default <E extends Enum<E>> Optional<E> findEnum(
+          final String key,
+          final Function<String, E> transformer) {
+    final Object object = get(key);
+    if (object == null)
+      return Optional.empty();
+    Valid.checkBoolean(
+            object instanceof String,
+            "No usable Enum-Value found for '" + key + "'.");
+    return Optional.of(transformer.apply((String) object));
   }
 
   /**
@@ -329,14 +388,51 @@ public interface DataStorage {
    */
   @Nullable
   default <T> T getSerializable(final String key, final Class<T> clazz) {
-    if (!contains(key)) {
-      return null;
+    if (contains(key)) {
+      Object raw = get(key);
+      if (raw != null) {
+        return SimplixSerializer.deserialize(raw, clazz);
+      }
     }
-    Object raw = get(key);
-    if (raw == null) {
-      return null;
+    return null;
+  }
+
+  /**
+   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializer} before.<br>
+   * If the key doesn't yet exist, it will be created in the data-structure, set to def and afterward returned.
+   *
+   * @return Serialized instance of class.
+   */
+  @Nullable
+  default <T> T getOrSetSerializable(final String key, final Class<T> clazz, final T def) {
+    if (contains(key)) {
+      Object raw = get(key);
+      if (raw != null) {
+        return SimplixSerializer.deserialize(raw, clazz);
+      }
     }
-    return SimplixSerializer.deserialize(raw, clazz);
+    setSerializable(key, def);
+    return def;
+  }
+
+  /**
+   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializer} before.
+   *
+   * @return Serialized instance of class.
+   * @throws NullPointerException if no serializer for the given class is found
+   * @throws ClassCastException if the data does not match
+   */
+  @Nullable
+  default <T> Optional<T> findSerializable(final String key, final Class<T> clazz) {
+    if (contains(key)) {
+      Object raw = get(key);
+      if (raw != null) {
+        return Optional.of(SimplixSerializer.deserialize(raw, clazz));
+      }
+    }
+    return Optional.empty();
   }
 
   @Nullable
@@ -363,6 +459,7 @@ public interface DataStorage {
    * @param key Key to data in our data-structure.
    * @param def Default value, if data-structure doesn't contain key.
    * @param <T> Type of default-value.
+   * @throws ClassCastException if the type is not valid
    */
   default <T> T getOrDefault(final String key, @NonNull final T def) {
     final Object raw = get(key);
@@ -385,7 +482,7 @@ public interface DataStorage {
   /**
    * Mix of setDefault & getDefault.
    * <p>Gets the value of the key in the data structure, casted to the type of the specified default def.
-   * If the key doesn't yet exist, it will be created in the data-structure, set to def and afterwards returned.</p>
+   * If the key doesn't yet exist, it will be created in the data-structure, set to def and afterward returned.</p>
    *
    * @param key Key to set the value
    * @param def Value to set or return.
