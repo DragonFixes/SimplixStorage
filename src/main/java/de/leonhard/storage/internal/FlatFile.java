@@ -34,16 +34,20 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   protected Consumer<FlatFile> reloadConsumer;
   @Setter
   protected String pathPrefix;
+  @Getter
+  protected final String pathPattern;
   private long lastLoaded;
 
   protected FlatFile(
       @NonNull final String name,
       @Nullable final String path,
       @NonNull final FileType fileType,
+      @Nullable final String pathPattern,
       @Nullable final Consumer<FlatFile> reloadConsumer) {
     Valid.checkBoolean(!name.isEmpty(), "Name mustn't be empty");
     this.fileType = fileType;
     this.reloadConsumer = reloadConsumer;
+    this.pathPattern = Objects.requireNonNullElse(pathPattern, ".");
     if (path == null || path.isEmpty()) {
       this.file = new File(FileUtils.replaceExtensions(name) + "." + fileType.getExtension());
     } else {
@@ -57,14 +61,40 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     }
   }
 
-  protected FlatFile(@NonNull final File file, @NonNull final FileType fileType) {
+  protected FlatFile(
+      @NonNull final String name,
+      @Nullable final String path,
+      @NonNull final FileType fileType,
+      @Nullable final Consumer<FlatFile> reloadConsumer) {
+    this(name, path, fileType, null, reloadConsumer);
+  }
+
+  protected FlatFile(@NonNull final File file, @NonNull final FileType fileType, @Nullable String pathPattern) {
     this.file = file;
     this.fileType = fileType;
+    this.pathPattern = Objects.requireNonNullElse(pathPattern, ".");
     this.reloadConsumer = null;
     Valid.checkBoolean(
         fileType == FileType.fromExtension(file),
         "Invalid file-extension for file type: '" + fileType + "'",
         "Extension: '" + FileUtils.getExtension(file) + "'");
+  }
+
+  protected FlatFile(@NonNull final File file, @NonNull final FileType fileType) {
+    this(file, fileType, null);
+  }
+
+  /**
+   * This constructor should only be used to store for example YAML-LIKE data in a .db file
+   *
+   * <p>Therefor no validation is possible. Might be unsafe.
+   */
+  protected FlatFile(@NonNull final File file, @Nullable String pathPattern) {
+    this.file = file;
+    this.reloadConsumer = null;
+    this.pathPattern = pathPattern;
+    // Might be null
+    this.fileType = FileType.fromFile(file);
   }
 
   /**
@@ -73,10 +103,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
    * <p>Therefor no validation is possible. Might be unsafe.
    */
   protected FlatFile(@NonNull final File file) {
-    this.file = file;
-    this.reloadConsumer = null;
-    // Might be null
-    this.fileType = FileType.fromFile(file);
+    this(file, (String) null);
   }
 
   // ----------------------------------------------------------------------------------------------------
@@ -135,7 +162,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   @Override
   public synchronized void set(final String key, final Object value) {
     reloadIfNeeded();
-    final String finalKey = (this.pathPrefix == null) ? key : this.pathPrefix + "." + key;
+    final String finalKey = (this.pathPrefix == null) ? key : this.pathPrefix + this.pathPattern + key;
     this.fileData.insert(finalKey, value);
     write();
     this.lastLoaded = System.currentTimeMillis();
@@ -144,7 +171,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   @Override
   public final Object get(final String key) {
     reloadIfNeeded();
-    final String finalKey = this.pathPrefix == null ? key : this.pathPrefix + "." + key;
+    final String finalKey = this.pathPrefix == null ? key : this.pathPrefix + this.pathPattern + key;
     return getFileData().get(finalKey);
   }
 
@@ -157,7 +184,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   @Override
   public final boolean contains(final String key) {
     reloadIfNeeded();
-    final String finalKey = (this.pathPrefix == null) ? key : this.pathPrefix + "." + key;
+    final String finalKey = (this.pathPrefix == null) ? key : this.pathPrefix + this.pathPattern + key;
     return this.fileData.containsKey(finalKey);
   }
 
@@ -299,7 +326,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
       handleReloadException(ex);
     } finally {
       if (this.fileData == null) {
-        this.fileData = new FileData(out, this.dataType);
+        this.fileData = new FileData(out, this.dataType, pathPattern);
       } else {
         this.fileData.loadData(out);
       }
@@ -378,5 +405,17 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     }catch (IllegalAccessException e) {
       throw SimplixProviders.exceptionHandler().create(e.getCause(), "Unable to set the value of fields in " + clazz.getName());
     }
+  }
+
+  /**
+   * Creates a path for this file with the path separator defined for this file.
+   */
+  public String createPath(@NonNull final String first, @NonNull final String... other) {
+    if (other.length == 0) return first;
+    StringBuilder sb = new StringBuilder(first);
+    for (String o : other) {
+      sb.append(pathPattern).append(o);
+    }
+    return sb.toString();
   }
 }

@@ -7,6 +7,7 @@ import de.leonhard.storage.internal.settings.ReloadSettings;
 import de.leonhard.storage.util.FileUtils;
 import lombok.Cleanup;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.val;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -25,7 +26,7 @@ import java.util.function.Consumer;
 public class Json extends FlatFile {
 
   public Json(final Json json) {
-    super(json.getFile(), json.fileType);
+    super(json.getFile(), json.fileType, json.getPathPattern());
     this.fileData = json.getFileData();
     this.pathPrefix = json.getPathPrefix();
   }
@@ -50,7 +51,16 @@ public class Json extends FlatFile {
               @Nullable final InputStream inputStream,
               @Nullable final ReloadSettings reloadSettings,
               @Nullable final Consumer<FlatFile> reloadConsumer) {
-    super(name, path, FileType.JSON, reloadConsumer);
+    this(name, path, inputStream, reloadSettings, null, reloadConsumer);
+  }
+
+  public Json(final String name,
+          @Nullable final String path,
+          @Nullable final InputStream inputStream,
+          @Nullable final ReloadSettings reloadSettings,
+          @Nullable final String pathPattern,
+          @Nullable final Consumer<FlatFile> reloadConsumer) {
+    super(name, path, FileType.JSON, pathPattern, reloadConsumer);
 
     if ((create() || this.file.length() == 0) && inputStream != null) {
       FileUtils.writeToFile(this.file, inputStream);
@@ -79,6 +89,7 @@ public class Json extends FlatFile {
    * @return Map
    */
   @Override
+  @NonNull
   public final Map<?,?> getMap(final String key) {
     val finalKey = (this.pathPrefix == null) ? key : this.pathPrefix + "." + key;
     if (!contains(finalKey)) {

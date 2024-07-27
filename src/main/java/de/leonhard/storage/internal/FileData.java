@@ -2,12 +2,12 @@ package de.leonhard.storage.internal;
 
 import de.leonhard.storage.internal.settings.DataType;
 import de.leonhard.storage.util.JsonUtils;
+
+import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.regex.Pattern;
+
+import lombok.Getter;
 import lombok.val;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
@@ -20,20 +20,42 @@ import org.json.JSONObject;
 public class FileData {
 
   private final Map<String, Object> localMap;
+  @Getter
+  private final String rawPath;
+  @Getter
+  private final String pathPattern;
 
-  public FileData(final Map<String, Object> map, final DataType dataType) {
+  public FileData(final Map<String, Object> map, final DataType dataType, final String pathPattern) {
+    this.rawPath = pathPattern;
+    this.pathPattern = Pattern.quote(this.rawPath);
     this.localMap = dataType.getMapImplementation();
 
     this.localMap.putAll(map);
   }
 
-  public FileData(final JSONObject jsonObject) {
+  public FileData(final Map<String, Object> map, final DataType dataType) {
+    this(map, dataType, ".");
+  }
+
+  public FileData(final JSONObject jsonObject, final String pathPattern) {
+    this.rawPath = pathPattern;
+    this.pathPattern = Pattern.quote(this.rawPath);
     this.localMap = new HashMap<>(jsonObject.toMap());
   }
 
-  public FileData(final JSONObject jsonObject, final DataType dataType) {
+  public FileData(final JSONObject jsonObject) {
+    this(jsonObject, ".");
+  }
+
+  public FileData(final JSONObject jsonObject, final DataType dataType, final String pathPattern) {
+    this.rawPath = pathPattern;
+    this.pathPattern = Pattern.quote(this.rawPath);
     this.localMap = dataType.getMapImplementation();
     this.localMap.putAll(jsonObject.toMap());
+  }
+
+  public FileData(final JSONObject jsonObject, final DataType dataType) {
+    this(jsonObject, dataType, ".");
   }
 
   public void clear() {
@@ -60,7 +82,7 @@ public class FileData {
    * @return the value assigned to the given key or null if the key does not exist.
    */
   public Object get(final String key) {
-    final String[] parts = key.split("\\.");
+    final String[] parts = key.split(this.pathPattern);
     return get(this.localMap, parts, 0);
   }
 
@@ -84,7 +106,7 @@ public class FileData {
    * @param value the value to be assigned to the key.
    */
   public synchronized void insert(final String key, final Object value) {
-    final String[] parts = key.split("\\.");
+    final String[] parts = key.split(this.pathPattern);
     this.localMap.put(
             parts[0],
             this.localMap.containsKey(parts[0]) && this.localMap.get(parts[0]) instanceof Map
@@ -115,7 +137,7 @@ public class FileData {
    * @return true if the key exists, otherwise false.
    */
   public boolean containsKey(final String key) {
-    final String[] parts = key.split("\\.");
+    final String[] parts = key.split(this.pathPattern);
     return containsKey(this.localMap, parts, 0);
   }
 
@@ -141,7 +163,7 @@ public class FileData {
    */
   public synchronized void remove(final String key) {
     if (containsKey(key)) {
-      final String[] parts = key.split("\\.");
+      final String[] parts = key.split(this.pathPattern);
       remove(parts);
     }
   }
@@ -232,14 +254,14 @@ public class FileData {
   }
 
   /**
-   * Private helper method to get the key set of an map containing maps recursively
+   * Private helper method to get the key set of a map containing maps recursively
    */
   private Set<String> multiLayerKeySet(final Map<String, Object> map) {
     final Set<String> out = new HashSet<>();
     for (final Map.Entry<String, Object> entry : map.entrySet()) {
       if (entry.getValue() instanceof Map) {
         for (final String tempKey : multiLayerKeySet((Map<String, Object>) entry.getValue())) {
-          out.add(entry.getKey() + "." + tempKey);
+          out.add(entry.getKey() + this.rawPath + tempKey);
         }
       } else {
         out.add(entry.getKey());
@@ -255,7 +277,7 @@ public class FileData {
       if (map.get(entry.getKey()) instanceof Map) {
         for (final String tempKey :
                 multiLayerKeySet((Map<String, Object>) map.get(entry.getKey()))) {
-          out.add(new SimpleEntry<>(entry.getKey() + "." + tempKey, entry.getValue()));
+          out.add(new SimpleEntry<>(entry.getKey() + this.rawPath + tempKey, entry.getValue()));
         }
       } else {
         out.add(entry);
@@ -321,11 +343,7 @@ public class FileData {
   // ----------------------------------------------------------------------------------------------------
 
   public Map<String, Object> toMap() {
-    if (this.localMap != null) {
-      return this.localMap;
-    } else {
-      return new HashMap<>();
-    }
+      return Objects.requireNonNullElseGet(this.localMap, HashMap::new);
   }
 
   public JSONObject toJsonObject() {

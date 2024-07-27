@@ -52,6 +52,19 @@ public class Config extends Yaml {
     setConfigSettings(ConfigSettings.PRESERVE_COMMENTS);
   }
 
+  public Config(
+          final String name,
+          @Nullable final String path,
+          @Nullable final InputStream inputStream,
+          @Nullable final ReloadSettings reloadSettings,
+          @Nullable final ConfigSettings configSettings,
+          @Nullable final DataType dataType,
+          @Nullable final String pathPattern,
+          @Nullable final Consumer<FlatFile> reloadConsumer) {
+    super(name, path, inputStream, reloadSettings, configSettings, dataType, pathPattern, reloadConsumer);
+    setConfigSettings(ConfigSettings.PRESERVE_COMMENTS);
+  }
+
   public Config(final File file) {
     super(file);
   }

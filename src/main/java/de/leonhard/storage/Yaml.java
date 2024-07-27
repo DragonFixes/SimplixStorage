@@ -39,7 +39,7 @@ public class Yaml extends FlatFile {
   private boolean exists = false;
 
   public Yaml(@NonNull final Yaml yaml) {
-    super(yaml.getFile());
+    super(yaml.getFile(), yaml.getPathPattern());
     this.fileData = yaml.getFileData();
     this.yamlEditor = yaml.getYamlEditor();
     this.parser = yaml.getParser();
@@ -76,7 +76,18 @@ public class Yaml extends FlatFile {
               @Nullable final ConfigSettings configSettings,
               @Nullable final DataType dataType,
               @Nullable final Consumer<FlatFile> reloadConsumer) {
-    super(name, path, FileType.YAML, reloadConsumer);
+    this(name, path, inputStream, reloadSettings, configSettings, dataType, null, null);
+  }
+
+  public Yaml(final String name,
+          @Nullable final String path,
+          @Nullable final InputStream inputStream,
+          @Nullable final ReloadSettings reloadSettings,
+          @Nullable final ConfigSettings configSettings,
+          @Nullable final DataType dataType,
+          @Nullable final String pathPattern,
+          @Nullable final Consumer<FlatFile> reloadConsumer) {
+    super(name, path, FileType.YAML, pathPattern, reloadConsumer);
     this.inputStream = inputStream;
 
     if (create() && inputStream != null) {

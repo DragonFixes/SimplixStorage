@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -60,15 +61,17 @@ public class FlatFileSection implements DataStorage {
   }
 
   @Override
+  @NonNull
   public <E extends Enum<E>> E getEnum(String key, Class<E> enumType) {
     return flatFile.getEnum(createFinalKey(key), enumType);
   }
   @Override
+  @NonNull
   public <E extends Enum<E>> E getEnum(String key, Class<E> enumType, Function<String, String> mapper) {
     return flatFile.getEnum(createFinalKey(key), enumType, mapper);
   }
 
   private String createFinalKey(final String key) {
-    return pathPrefix == null || pathPrefix.isEmpty() ? key : pathPrefix + "." + key;
+    return pathPrefix == null || pathPrefix.isEmpty() ? key : pathPrefix + flatFile.getPathPattern() + key;
   }
 }

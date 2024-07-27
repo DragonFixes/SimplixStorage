@@ -25,6 +25,7 @@ public final class SimplixBuilder {
   private ReloadSettings reloadSettings;
   private ConfigSettings configSettings;
   private DataType dataType;
+  private String pathPattern = null;
 
   private @Nullable Consumer<FlatFile> reloadConsumer = null;
 
@@ -120,6 +121,27 @@ public final class SimplixBuilder {
     return this;
   }
 
+  public SimplixBuilder setPathPattern(@Nullable final String pathPattern) {
+    this.pathPattern = pathPattern;
+    return this;
+  }
+
+  /**
+   * Uses "."
+   */
+  public SimplixBuilder setDotPattern() {
+    this.pathPattern = ".";
+    return this;
+  }
+
+  /**
+   * Uses "{}"
+   */
+  public SimplixBuilder setBracketPattern() {
+    this.pathPattern = "{}";
+    return this;
+  }
+
   // ----------------------------------------------------------------------------------------------------
   // Create the objects of our FileTypes
   // ----------------------------------------------------------------------------------------------------
@@ -132,6 +154,7 @@ public final class SimplixBuilder {
         this.reloadSettings,
         this.configSettings,
         this.dataType,
+        this.pathPattern,
         reloadConsumer);
   }
 
@@ -143,6 +166,7 @@ public final class SimplixBuilder {
         this.reloadSettings,
         this.configSettings,
         this.dataType,
+            this.pathPattern,
         reloadConsumer);
   }
 
@@ -152,6 +176,7 @@ public final class SimplixBuilder {
         this.path,
         this.inputStream,
         this.reloadSettings,
+        this.pathPattern,
         reloadConsumer);
   }
 
@@ -161,6 +186,7 @@ public final class SimplixBuilder {
         this.path,
         this.inputStream,
         this.reloadSettings,
+        this.pathPattern,
         reloadConsumer);
   }
 }

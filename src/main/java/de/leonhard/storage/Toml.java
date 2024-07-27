@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 public class Toml extends FlatFile {
 
   public Toml(@NonNull final Toml toml) {
-    super(toml.getFile());
+    super(toml.getFile(), toml.getPathPattern());
     this.fileData = toml.getFileData();
     this.pathPrefix = toml.getPathPrefix();
   }
@@ -38,7 +38,18 @@ public class Toml extends FlatFile {
       @Nullable final ReloadSettings reloadSettings,
       @Nullable final Consumer<FlatFile> reloadConsumer
   ) {
-    super(name, path, FileType.TOML, reloadConsumer);
+    this(name, path, inputStream, reloadSettings, null, reloadConsumer);
+  }
+
+  public Toml(
+          @NonNull final String name,
+          @NonNull final String path,
+          @Nullable final InputStream inputStream,
+          @Nullable final ReloadSettings reloadSettings,
+          @Nullable final String pathPattern,
+          @Nullable final Consumer<FlatFile> reloadConsumer
+  ) {
+    super(name, path, FileType.TOML, pathPattern, reloadConsumer);
 
     if (create() && inputStream != null) {
       FileUtils.writeToFile(this.file, inputStream);
