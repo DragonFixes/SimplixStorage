@@ -127,6 +127,30 @@ public interface DataStorage {
   }
 
   /**
+   * Get a value or null if no present
+   *
+   * @param key Path to value in data-structure
+   * @param def Type of it
+   */
+  @Nullable
+  default <T> T getRaw(final String key, final T def) {
+    final Object raw = get(key);
+    return raw == null ? null : ClassWrapper.getFromDef(raw, def);
+  }
+
+  /**
+   * Get a value or null if no present
+   *
+   * @param key Path to value in data-structure
+   * @param type Type of it
+   */
+  @Nullable
+  default <T> T getRaw(final String key, final Class<T> type) {
+    final Object raw = get(key);
+    return raw == null ? null : ClassWrapper.getFromDef(raw, type);
+  }
+
+  /**
    * Get a String from a data-structure
    *
    * @param key Path to String in data-structure
@@ -279,6 +303,27 @@ public interface DataStorage {
    * @param key      Path to Enum
    * @param enumType Class of the Enum
    * @param <E>      EnumType
+   * @return Serialized
+   * @throws IllegalArgumentException if no enum match
+   */
+  @Nullable
+  default <E extends Enum<E>> E getRawEnum(
+          final String key,
+          final Class<E> enumType) {
+    final Object object = get(key);
+    if (object == null) return null;
+    Valid.checkBoolean(
+            object instanceof String,
+            "No usable Enum-Value found for '" + key + "'.");
+    return Enum.valueOf(enumType, (String) object);
+  }
+
+  /**
+   * Serialize an Enum from entry in the data-structure
+   *
+   * @param key      Path to Enum
+   * @param enumType Class of the Enum
+   * @param <E>      EnumType
    * @return Serialized Enum
    */
   default <E extends Enum<E>> Optional<E> findEnum(
@@ -324,6 +369,30 @@ public interface DataStorage {
    * @param enumType Class of the Enum
    * @param mapper   Mapper for some simple scenarios
    * @param <E>      EnumType
+   * @throws IllegalArgumentException if no enum match
+   * @return Serialized Enum
+   */
+  @Nullable
+  default <E extends Enum<E>> E getRawEnum(
+          final String key,
+          final Class<E> enumType,
+          final Function<String, String> mapper) {
+    final Object object = get(key);
+    if (object == null) return null;
+    Valid.checkBoolean(
+            object instanceof String,
+            "No usable Enum-Value found for '" + key + "'.");
+    return Enum.valueOf(enumType, mapper.apply((String) object));
+  }
+
+  /**
+   * Serialize an Enum from entry in the data-structure.<br>
+   * Uses an extra mapper to skip simple scenarios. (like capitalization)
+   *
+   * @param key      Path to Enum
+   * @param enumType Class of the Enum
+   * @param mapper   Mapper for some simple scenarios
+   * @param <E>      EnumType
    * @return Serialized Enum
    */
   default <E extends Enum<E>> Optional<E> findEnum(
@@ -349,10 +418,33 @@ public interface DataStorage {
    * @throws IllegalArgumentException if no enum match
    * @return Serialized Enum
    */
+  @NonNull
   default <E extends Enum<E>> E getEnum(
           final String key,
           final Function<String, E> transformer) {
     final Object object = get(key);
+    Valid.checkBoolean(
+            object instanceof String,
+            "No usable Enum-Value found for '" + key + "'.");
+    return transformer.apply((String) object);
+  }
+
+  /**
+   * Serialize an Enum from entry in the data-structure.<br>
+   * Uses a transformer to get the enum.
+   *
+   * @param key         Path to Enum
+   * @param transformer Transformer to enum
+   * @param <E>         EnumType
+   * @throws IllegalArgumentException if no enum match
+   * @return Serialized Enum
+   */
+  @Nullable
+  default <E extends Enum<E>> E geRawEnum(
+          final String key,
+          final Function<String, E> transformer) {
+    final Object object = get(key);
+    if (object == null) return null;
     Valid.checkBoolean(
             object instanceof String,
             "No usable Enum-Value found for '" + key + "'.");

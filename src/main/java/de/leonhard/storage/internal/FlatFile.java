@@ -418,4 +418,15 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     }
     return sb.toString();
   }
+
+  /**
+   * Creates a path for this file with the path separator defined for this file.
+   */
+  public String createPath(@NonNull final String[] path) {
+    StringBuilder sb = new StringBuilder();
+    for (String o : path) {
+      sb.append(pathPattern).append(o);
+    }
+    return sb.toString();
+  }
 }
