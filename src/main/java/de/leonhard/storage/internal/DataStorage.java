@@ -259,6 +259,30 @@ public interface DataStorage {
   }
 
   /**
+   * Get a List from a data-structure.<br>
+   * Uses a function to convert the content.
+   *
+   * @param key    Path to List in data structure.
+   * @param mapper Mapper to parse the list content.
+   */
+  @NonNull
+  default <T> List<T> getList(final String key, final Function<String, T> mapper) {
+    return getOrDefault(key, new ArrayList<String>()).stream().map(mapper).collect(Collectors.toList());
+  }
+
+  /**
+   * Get a List from a data-structure.<br>
+   * Uses a function to convert the content and filters null results.
+   *
+   * @param key    Path to List in data structure.
+   * @param mapper Mapper to parse the list content.
+   */
+  @NonNull
+  default <T> List<T> getListFiltered(final String key, final Function<String, T> mapper) {
+    return getOrDefault(key, new ArrayList<String>()).stream().map(mapper).filter(Objects::nonNull).collect(Collectors.toList());
+  }
+
+  /**
    * Attempts to get a List of the given type
    * @param key Path to List in data structure.
    */
@@ -285,6 +309,37 @@ public interface DataStorage {
   @NonNull
   default List<Long> getLongList(final String key) {
     return getOrDefault(key, new ArrayList<String>()).stream().map(Long::parseLong).collect(Collectors.toList());
+  }
+
+  /**
+   * Enum list mapping directly to the value
+   */
+  @NonNull
+  default <E extends Enum<E>> List<E> getEnumList(
+          final String key,
+          final Function<String, E> mapper) {
+    return getOrDefault(key, new ArrayList<String>()).stream().map(mapper).collect(Collectors.toList());
+  }
+
+  /**
+   * Enum list mapping the base value
+   */
+  @NonNull
+  default <E extends Enum<E>> List<E> getEnumList(
+          final String key,
+          final Class<E> type,
+          final Function<String, String> mapper) {
+    return getOrDefault(key, new ArrayList<String>()).stream().map(s -> Enum.valueOf(type, mapper.apply(s))).collect(Collectors.toList());
+  }
+
+  /**
+   * Enum list trying to map the value
+   */
+  @NonNull
+  default <E extends Enum<E>> List<E> getEnumList(
+          final String key,
+          final Class<E> type) {
+    return getOrDefault(key, new ArrayList<String>()).stream().map(s -> Enum.valueOf(type, s)).collect(Collectors.toList());
   }
 
   @NonNull
@@ -434,10 +489,10 @@ public interface DataStorage {
 
   /**
    * Serialize an Enum from entry in the data-structure.<br>
-   * Uses a transformer to get the enum.
+   * Uses a mapper to get the enum.
    *
    * @param key         Path to Enum
-   * @param transformer Transformer to enum
+   * @param mapper Transformer to enum
    * @param <E>         EnumType
    * @throws IllegalArgumentException if no enum match
    * @return Serialized Enum
@@ -445,20 +500,20 @@ public interface DataStorage {
   @NonNull
   default <E extends Enum<E>> E getEnum(
           final String key,
-          final Function<String, E> transformer) {
+          final Function<String, E> mapper) {
     final Object object = get(key);
     Valid.checkBoolean(
             object instanceof String,
             "No usable Enum-Value found for '" + key + "'.");
-    return transformer.apply((String) object);
+    return mapper.apply((String) object);
   }
 
   /**
    * Serialize an Enum from entry in the data-structure.<br>
-   * Uses a transformer to get the enum.
+   * Uses a mapper to get the enum.
    *
    * @param key         Path to Enum
-   * @param transformer Transformer to enum
+   * @param mapper Transformer to enum
    * @param <E>         EnumType
    * @throws IllegalArgumentException if no enum match
    * @return Serialized Enum
@@ -466,34 +521,34 @@ public interface DataStorage {
   @Nullable
   default <E extends Enum<E>> E geRawEnum(
           final String key,
-          final Function<String, E> transformer) {
+          final Function<String, E> mapper) {
     final Object object = get(key);
     if (object == null) return null;
     Valid.checkBoolean(
             object instanceof String,
             "No usable Enum-Value found for '" + key + "'.");
-    return transformer.apply((String) object);
+    return mapper.apply((String) object);
   }
 
   /**
    * Serialize an Enum from entry in the data-structure.<br>
-   * Uses a transformer to get the enum.
+   * Uses a mapper to get the enum.
    *
    * @param key         Path to Enum
-   * @param transformer Transformer to enum
+   * @param mapper Transformer to enum
    * @param <E>         EnumType
    * @return Serialized Enum
    */
   default <E extends Enum<E>> Optional<E> findEnum(
           final String key,
-          final Function<String, E> transformer) {
+          final Function<String, E> mapper) {
     final Object object = get(key);
     if (object == null)
       return Optional.empty();
     Valid.checkBoolean(
             object instanceof String,
             "No usable Enum-Value found for '" + key + "'.");
-    return Optional.of(transformer.apply((String) object));
+    return Optional.of(mapper.apply((String) object));
   }
 
   /**
