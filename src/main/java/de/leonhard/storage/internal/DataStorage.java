@@ -97,6 +97,7 @@ public interface DataStorage {
    * @param key   The key your value should be associated with.
    * @param value The value you want to set in your data-structure.
    * @throws SimplixValidationException if an error is found
+   * @see #setSerializable(String, Object, Class) 
    */
   default <T> void setSerializable(@NonNull final String key, @NonNull final T value) {
     try {
@@ -108,6 +109,29 @@ public interface DataStorage {
           "Can't serialize: '" + key + "'",
           "Class: '" + value.getClass().getName() + "'",
           "Package: '" + value.getClass().getPackage() + "'");
+    }
+  }
+
+  /**
+   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
+   * your serializable in the {@link SimplixSerializer} before.<br>
+   * This ensures to serialize with the given type.
+   *
+   * @param key   The key your value should be associated with.
+   * @param value The value you want to set in your data-structure.
+   * @throws SimplixValidationException if an error is found
+   * @see #setSerializable(String, Object)
+   */
+  default <T> void setSerializable(@NonNull final String key, @NonNull final T value, @NonNull final Class<T> type) {
+    try {
+      final Object data = SimplixSerializer.serialize(value, type);
+      set(key, data);
+    } catch (final Throwable throwable) {
+      throw SimplixProviders.exceptionHandler().create(
+              throwable,
+              "Can't serialize: '" + key + "'",
+              "Class: '" + value.getClass().getName() + "'",
+              "Package: '" + value.getClass().getPackage() + "'");
     }
   }
 
