@@ -18,9 +18,9 @@ import org.jetbrains.annotations.Nullable;
 public class Toml extends FlatFile {
 
   public Toml(@NonNull final Toml toml) {
-    super(toml.getFile(), toml.getPathPattern());
+    super(toml.getFile(), toml.pathSeparator());
     this.fileData = toml.getFileData();
-    this.pathPrefix = toml.getPathPrefix();
+    this.pathPrefix = toml.getPathPrefixArray();
   }
 
   public Toml(final String name, final String path) {

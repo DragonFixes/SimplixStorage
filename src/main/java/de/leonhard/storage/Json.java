@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,9 +27,9 @@ import java.util.function.Consumer;
 public class Json extends FlatFile {
 
   public Json(final Json json) {
-    super(json.getFile(), json.fileType, json.getPathPattern());
+    super(json.getFile(), json.fileType, json.pathSeparator());
     this.fileData = json.getFileData();
-    this.pathPrefix = json.getPathPrefix();
+    this.pathPrefix = json.getPathPrefixArray();
   }
 
   public Json(final String name, final String path) {
@@ -90,8 +91,8 @@ public class Json extends FlatFile {
    */
   @Override
   @NonNull
-  public final Map<?,?> getMap(final String key) {
-    val finalKey = (this.pathPrefix == null) ? key : this.pathPrefix + "." + key;
+  public final Map<?,?> getMap(final String[] key) {
+    val finalKey = (this.pathPrefix == null) ? key : concatenatePath(this.pathPrefix, key);
     if (!contains(finalKey)) {
       return new HashMap<>();
     } else {
@@ -103,7 +104,7 @@ public class Json extends FlatFile {
       }
       // Exception in casting
       throw new IllegalArgumentException(
-              "ClassCastEx: Json contains key: '" + key + "' but it is not a Map");
+              "ClassCastEx: Json contains key: '" + Arrays.toString(key) + "' but it is not a Map");
     }
   }
 

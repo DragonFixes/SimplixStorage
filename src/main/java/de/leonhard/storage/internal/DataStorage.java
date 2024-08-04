@@ -5,12 +5,13 @@ import de.leonhard.storage.internal.provider.SimplixProviders;
 import de.leonhard.storage.internal.serialize.SimplixSerializer;
 import de.leonhard.storage.util.ClassWrapper;
 import de.leonhard.storage.util.Valid;
-import lombok.NonNull;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public interface DataStorage {
 
@@ -21,7 +22,17 @@ public interface DataStorage {
    * @return Object in data-structure. Null if nothing was found!
    */
   @Nullable
-  Object get(final String key);
+  default Object get(final String key) {
+    return get(splitPath(key));
+  }
+  /**
+   * Basic method to receive data from your data-structure
+   *
+   * @param key Key to search data for
+   * @return Object in data-structure. Null if nothing was found!
+   */
+  @Nullable
+  Object get(final String[] key);
 
   /**
    * Checks whether a key exists in the data-structure
@@ -29,7 +40,62 @@ public interface DataStorage {
    * @param key Key to check
    * @return Returned value.
    */
-  boolean contains(final String key);
+  default boolean contains(final String key) {
+    return contains(splitPath(key));
+  }
+
+  /**
+   * Checks whether a key exists in the data-structure
+   *
+   * @param key Key to check
+   * @return Returned value.
+   */
+  boolean contains(final String[] key);
+
+  /**
+   * @return The separator for this file.
+   */
+  String pathSeparator();
+
+  /**
+   * @return A string array split by the separator of this file.
+   */
+  default String[] splitPath(String path) {
+    return path.split(pathSeparator());
+  }
+
+  /**
+   * Creates a path for this file with the path separator defined for this file.
+   */
+  default String createPath(@NotNull final String first, @NotNull final String... other) {
+    if (other.length == 0) return first;
+    StringBuilder sb = new StringBuilder(first);
+    for (String o : other) {
+      sb.append(pathSeparator()).append(o);
+    }
+    return sb.toString();
+  }
+
+  /**
+   * Creates a path for this file with the path separator defined for this file.
+   */
+  default String createPath(String[] path) {
+    StringBuilder sb = null;
+    for (String o : path) {
+      if (sb == null) {
+        sb = new StringBuilder(o);
+      } else
+        sb.append(pathSeparator()).append(o);
+    }
+    return sb == null ? "" : sb.toString();
+  }
+
+  /**
+   * @return A string array split by the separator of this file.
+   */
+  default String[] concatenatePath(String[] first, String[] second) {
+    return Stream.concat(Arrays.stream(first), Arrays.stream(second)).toArray(String[]::new);
+  }
 
   /**
    * Set an object to your data-structure
@@ -37,17 +103,39 @@ public interface DataStorage {
    * @param key   The key your value should be associated with
    * @param value The value you want to set in your data-structure.
    */
-  void set(final String key, final Object value);
+  default void set(final String key, final Object value) {
+    set(splitPath(key), value);
+  }
+
+  /**
+   * Set an object to your data-structure
+   *
+   * @param key   The key your value should be associated with
+   * @param value The value you want to set in your data-structure.
+   */
+  void set(final String[] key, final Object value);
 
   Set<String> singleLayerKeySet();
 
-  Set<String> singleLayerKeySet(final String key);
+  default Set<String> singleLayerKeySet(final String key) {
+    return singleLayerKeySet(splitPath(key));
+  }
+
+  Set<String> singleLayerKeySet(final String[] key);
 
   Set<String> keySet();
 
-  Set<String> keySet(final String key);
+  default Set<String> keySet(final String key) {
+    return keySet(splitPath(key));
+  }
 
-  void remove(final String key);
+  Set<String> keySet(final String[] key);
+
+  default void remove(final String key) {
+    remove(splitPath(key));
+  }
+
+  void remove(final String[] key);
 
   // ----------------------------------------------------------------------------------------------------
   //
@@ -64,6 +152,17 @@ public interface DataStorage {
    * @throws ClassCastException if the type is not valid
    */
   default <T> Optional<T> find(final String key, final Class<T> type) {
+    return find(splitPath(key), type);
+  }
+  /**
+   * Method to get a value of a predefined type from our data structure will return {@link
+   * Optional#empty()} if the value wasn't found.
+   *
+   * @param key  Key to search the value for
+   * @param type Type of the value
+   * @throws ClassCastException if the type is not valid
+   */
+  default <T> Optional<T> find(final String[] key, final Class<T> type) {
     final Object raw = get(key);
     //Key wasn't found
     if (raw == null) {
@@ -82,6 +181,19 @@ public interface DataStorage {
    * @throws ClassCastException if the type is not valid
    */
   default <T> Optional<T> find(final String key, final T type) {
+    return find(splitPath(key), type);
+  }
+
+  /**
+   * Method to get a value of a predefined type from our data structure will return {@link
+   * Optional#empty()} if the value wasn't found.<br>
+   * The type is only used to get the class.
+   *
+   * @param key  Key to search the value for
+   * @param type Type of the value
+   * @throws ClassCastException if the type is not valid
+   */
+  default <T> Optional<T> find(final String[] key, final T type) {
     final Object raw = get(key);
     //Key wasn't found
     if (raw == null) {
@@ -97,18 +209,18 @@ public interface DataStorage {
    * @param key   The key your value should be associated with.
    * @param value The value you want to set in your data-structure.
    * @throws SimplixValidationException if an error is found
-   * @see #setSerializable(String, Object, Class) 
+   * @see #setSerializable(String, Object, Class)
    */
-  default <T> void setSerializable(@NonNull final String key, @NonNull final T value) {
+  default <T> void setSerializable(@NotNull final String key, @NotNull final T value) {
     try {
       final Object data = SimplixSerializer.serialize(value);
       set(key, data);
     } catch (final Throwable throwable) {
       throw SimplixProviders.exceptionHandler().create(
-          throwable,
-          "Can't serialize: '" + key + "'",
-          "Class: '" + value.getClass().getName() + "'",
-          "Package: '" + value.getClass().getPackage() + "'");
+              throwable,
+              "Can't serialize: '" + key + "'",
+              "Class: '" + value.getClass().getName() + "'",
+              "Package: '" + value.getClass().getPackage() + "'");
     }
   }
 
@@ -122,14 +234,140 @@ public interface DataStorage {
    * @throws SimplixValidationException if an error is found
    * @see #setSerializable(String, Object)
    */
-  default <T> void setSerializable(@NonNull final String key, @NonNull final T value, @NonNull final Class<T> type) {
+  default <T> void setSerializable(@NotNull final String key, @NotNull final T value, @NotNull final Class<T> type) {
+    setSerializable(splitPath(key), value, type);
+  }
+
+  /**
+   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
+   * your serializable in the {@link SimplixSerializer} before.<br>
+   * This ensures to serialize with the given type.
+   *
+   * @param key   The key your value should be associated with.
+   * @param value The value you want to set in your data-structure.
+   * @throws SimplixValidationException if an error is found
+   * @see #setSerializable(String, Object)
+   */
+  default <T> void setSerializable(@NotNull final String[] key, @NotNull final T value, @NotNull final Class<T> type) {
     try {
       final Object data = SimplixSerializer.serialize(value, type);
       set(key, data);
     } catch (final Throwable throwable) {
       throw SimplixProviders.exceptionHandler().create(
               throwable,
-              "Can't serialize: '" + key + "'",
+              "Can't serialize: '" + createPath(key) + "'",
+              "Class: '" + value.getClass().getName() + "'",
+              "Package: '" + value.getClass().getPackage() + "'");
+    }
+  }
+
+  /**
+   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
+   * your serializable in the {@link SimplixSerializer} before.
+   *
+   * @param key   The key your value should be associated with.
+   * @param value The value you want to set in your data-structure.
+   * @throws SimplixValidationException if an error is found
+   */
+  default <T> void setSerializableList(@NotNull final String key, @NotNull final List<T> value, @NotNull final Class<T> type) {
+    try {
+      final Object data = SimplixSerializer.serializeList(value, type);
+      set(key, data);
+    } catch (final Throwable throwable) {
+      throw SimplixProviders.exceptionHandler().create(
+              throwable,
+              "Can't serialize list: '" + key + "'",
+              "Class: '" + value.getClass().getName() + "'",
+              "Package: '" + value.getClass().getPackage() + "'");
+    }
+  }
+
+  /**
+   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
+   * your serializable in the {@link SimplixSerializer} before.
+   *
+   * @param key   The key your value should be associated with.
+   * @param value The value you want to set in your data-structure.
+   * @throws SimplixValidationException if an error is found
+   */
+  default <T> void setSerializableListFiltered(@NotNull final String key, @NotNull final List<T> value, @NotNull final Class<T> type) {
+    setSerializableListFiltered(splitPath(key), value, type);
+  }
+
+  default <T> void setSerializableListFiltered(@NotNull final String[] key, @NotNull final List<T> value, @NotNull final Class<T> type) {
+    try {
+      final Object data = SimplixSerializer.serializeListFiltered(value, type);
+      set(key, data);
+    } catch (final Throwable throwable) {
+      throw SimplixProviders.exceptionHandler().create(
+              throwable,
+              "Can't serialize list: '" + createPath(key) + "'",
+              "Class: '" + value.getClass().getName() + "'",
+              "Package: '" + value.getClass().getPackage() + "'");
+    }
+  }
+
+  /**
+   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
+   * your serializable in the {@link SimplixSerializer} before.
+   *
+   * @param key   The key your value should be associated with.
+   * @param value The value you want to set in your data-structure.
+   * @throws SimplixValidationException if an error is found
+   */
+  default <T> void setSerializableMap(@NotNull final String key, @NotNull final Map<String, T> value, @NotNull final Class<T> type) {
+    setSerializableMap(splitPath(key), value, type);
+  }
+
+  /**
+   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
+   * your serializable in the {@link SimplixSerializer} before.
+   *
+   * @param key   The key your value should be associated with.
+   * @param value The value you want to set in your data-structure.
+   * @throws SimplixValidationException if an error is found
+   */
+  default <T> void setSerializableMap(@NotNull final String[] key, @NotNull final Map<String, T> value, @NotNull final Class<T> type) {
+    try {
+      final Object data = SimplixSerializer.serializeMap(value, type);
+      set(key, data);
+    } catch (final Throwable throwable) {
+      throw SimplixProviders.exceptionHandler().create(
+              throwable,
+              "Can't serialize map: '" + createPath(key) + "'",
+              "Class: '" + value.getClass().getName() + "'",
+              "Package: '" + value.getClass().getPackage() + "'");
+    }
+  }
+
+  /**
+   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
+   * your serializable in the {@link SimplixSerializer} before.
+   *
+   * @param key   The key your value should be associated with.
+   * @param value The value you want to set in your data-structure.
+   * @throws SimplixValidationException if an error is found
+   */
+  default <T> void setSerializableMapFiltered(@NotNull final String key, @NotNull final Map<String, T> value, @NotNull final Class<T> type) {
+    setSerializableMapFiltered(splitPath(key), value, type);
+  }
+
+  /**
+   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
+   * your serializable in the {@link SimplixSerializer} before.
+   *
+   * @param key   The key your value should be associated with.
+   * @param value The value you want to set in your data-structure.
+   * @throws SimplixValidationException if an error is found
+   */
+  default <T> void setSerializableMapFiltered(@NotNull final String[] key, @NotNull final Map<String, T> value, @NotNull final Class<T> type) {
+    try {
+      final Object data = SimplixSerializer.serializeMapFiltered(value, type);
+      set(key, data);
+    } catch (final Throwable throwable) {
+      throw SimplixProviders.exceptionHandler().create(
+              throwable,
+              "Can't serialize map: '" + createPath(key) + "'",
               "Class: '" + value.getClass().getName() + "'",
               "Package: '" + value.getClass().getPackage() + "'");
     }
@@ -147,6 +385,16 @@ public interface DataStorage {
    * @see #getOrDefault(String, Object)
    */
   default <T> T get(final String key, final T def) {
+    return get(splitPath(key), def);
+  }
+  /**
+   * Get a value or a default one
+   *
+   * @param key Path to value in data-structure
+   * @param def Default value & type of it
+   * @see #getOrDefault(String, Object)
+   */
+  default <T> T get(final String[] key, final T def) {
     return getOrDefault(key, def);
   }
 
@@ -158,6 +406,17 @@ public interface DataStorage {
    */
   @Nullable
   default <T> T getRaw(final String key, final T def) {
+    return getRaw(splitPath(key), def);
+  }
+
+  /**
+   * Get a value or null if no present
+   *
+   * @param key Path to value in data-structure
+   * @param def Type of it
+   */
+  @Nullable
+  default <T> T getRaw(final String[] key, final T def) {
     final Object raw = get(key);
     return raw == null ? null : ClassWrapper.getFromDef(raw, def);
   }
@@ -170,6 +429,17 @@ public interface DataStorage {
    */
   @Nullable
   default <T> T getRaw(final String key, final Class<T> type) {
+    return getRaw(splitPath(key), type);
+  }
+
+  /**
+   * Get a value or null if no present
+   *
+   * @param key Path to value in data-structure
+   * @param type Type of it
+   */
+  @Nullable
+  default <T> T getRaw(final String[] key, final Class<T> type) {
     final Object raw = get(key);
     return raw == null ? null : ClassWrapper.getFromDef(raw, type);
   }
@@ -253,32 +523,52 @@ public interface DataStorage {
    *
    * @param key Path to List in data structure.
    */
-  @NonNull
+  @NotNull
   default List<?> getList(final String key) {
+    return getOrDefault(key, new ArrayList<>());
+  }
+  /**
+   * Get a List from a data-structure
+   *
+   * @param key Path to List in data structure.
+   */
+  @NotNull
+  default List<?> getList(final String[] key) {
     return getOrDefault(key, new ArrayList<>());
   }
 
   /**
-   * Get a List from a data-structure.<br>
-   * Uses a function to convert the content.
+   * Get a List from a data-structure and use a mapper for simple values.<br>
+   * This is for simple values, for complex implementations use a custom serializer instead.
    *
    * @param key    Path to List in data structure.
    * @param mapper Mapper to parse the list content.
    */
-  @NonNull
+  @NotNull
   default <T> List<T> getList(final String key, final Function<String, T> mapper) {
+    return getList(splitPath(key), mapper);
+  }
+
+  @NotNull
+  default <T> List<T> getList(final String[] key, final Function<String, T> mapper) {
     return getOrDefault(key, new ArrayList<String>()).stream().map(mapper).collect(Collectors.toList());
   }
 
   /**
-   * Get a List from a data-structure.<br>
-   * Uses a function to convert the content and filters null results.
+   * Get a List from a data-structure and use a mapper for simple values.<br>
+   * Also filters the null results<br>
+   * This is for simple values, for complex implementations use a custom serializer instead.
    *
    * @param key    Path to List in data structure.
    * @param mapper Mapper to parse the list content.
    */
-  @NonNull
+  @NotNull
   default <T> List<T> getListFiltered(final String key, final Function<String, T> mapper) {
+    return getListFiltered(splitPath(key), mapper);
+  }
+
+  @NotNull
+  default <T> List<T> getListFiltered(final String[] key, final Function<String, T> mapper) {
     return getOrDefault(key, new ArrayList<String>()).stream().map(mapper).filter(Objects::nonNull).collect(Collectors.toList());
   }
 
@@ -286,72 +576,77 @@ public interface DataStorage {
    * Attempts to get a List of the given type
    * @param key Path to List in data structure.
    */
-  @NonNull
+  @NotNull
   default <T> List<T> getListParameterized(final String key) {
     return getOrSetDefault(key, new ArrayList<>());
   }
 
-  @NonNull
+  @NotNull
   default List<String> getStringList(final String key) {
     return getOrDefault(key, new ArrayList<>());
   }
 
-  @NonNull
+  @NotNull
   default List<Integer> getIntegerList(final String key) {
     return getOrDefault(key, new ArrayList<String>()).stream().map(Integer::parseInt).collect(Collectors.toList());
   }
 
-  @NonNull
+  @NotNull
   default List<Byte> getByteList(final String key) {
     return getOrDefault(key, new ArrayList<String>()).stream().map(Byte::parseByte).collect(Collectors.toList());
   }
 
-  @NonNull
+  @NotNull
   default List<Long> getLongList(final String key) {
     return getOrDefault(key, new ArrayList<String>()).stream().map(Long::parseLong).collect(Collectors.toList());
   }
 
   /**
-   * Enum list mapping directly to the value
+   * Enum list trying to map the value
    */
-  @NonNull
+  @NotNull
   default <E extends Enum<E>> List<E> getEnumList(
           final String key,
-          final Function<String, E> mapper) {
-    return getOrDefault(key, new ArrayList<String>()).stream().map(mapper).collect(Collectors.toList());
+          final Class<E> type) {
+    return getList(key, s -> Enum.valueOf(type, s));
   }
 
   /**
    * Enum list mapping the base value
    */
-  @NonNull
+  @NotNull
   default <E extends Enum<E>> List<E> getEnumList(
           final String key,
           final Class<E> type,
           final Function<String, String> mapper) {
-    return getOrDefault(key, new ArrayList<String>()).stream().map(s -> Enum.valueOf(type, mapper.apply(s))).collect(Collectors.toList());
+    return getList(key, s -> Enum.valueOf(type, mapper.apply(s)));
   }
 
   /**
-   * Enum list trying to map the value
+   * Enum list mapping directly to the value
    */
-  @NonNull
+  @NotNull
   default <E extends Enum<E>> List<E> getEnumList(
           final String key,
-          final Class<E> type) {
-    return getOrDefault(key, new ArrayList<String>()).stream().map(s -> Enum.valueOf(type, s)).collect(Collectors.toList());
+          final Function<String, E> mapper) {
+    return getList(key, mapper);
   }
 
-  @NonNull
-  default Map<?, ?> getMap(final String key) {
+  @NotNull
+  default Map<?, ?> getMap(final String[] key) {
     return getOrDefault(key, new HashMap<>());
+  }
+
+  @NotNull
+  default Map<?, ?> getMap(final String key) {
+    return getMap(splitPath(key));
   }
 
   /**
    * Attempts to get a map of the given type
    * @param key Path to the Map in the data-structure
    */
-  @NonNull
+  @NotNull
   default <K, V> Map<K, V> getMapParameterized(final String key) {
     return getOrSetDefault(key, new HashMap<>());
   }
@@ -365,7 +660,7 @@ public interface DataStorage {
    * @return Serialized
    * @throws IllegalArgumentException if no enum match
    */
-  @NonNull
+  @NotNull
   default <E extends Enum<E>> E getEnum(
       final String key,
       final Class<E> enumType) {
@@ -428,7 +723,7 @@ public interface DataStorage {
    * @throws IllegalArgumentException if no enum match
    * @return Serialized Enum
    */
-  @NonNull
+  @NotNull
   default <E extends Enum<E>> E getEnum(
           final String key,
           final Class<E> enumType,
@@ -497,7 +792,7 @@ public interface DataStorage {
    * @throws IllegalArgumentException if no enum match
    * @return Serialized Enum
    */
-  @NonNull
+  @NotNull
   default <E extends Enum<E>> E getEnum(
           final String key,
           final Function<String, E> mapper) {
@@ -519,7 +814,7 @@ public interface DataStorage {
    * @return Serialized Enum
    */
   @Nullable
-  default <E extends Enum<E>> E geRawEnum(
+  default <E extends Enum<E>> E getRawEnum(
           final String key,
           final Function<String, E> mapper) {
     final Object object = get(key);
@@ -558,32 +853,34 @@ public interface DataStorage {
    * @return Serialized instance of class.
    */
   @Nullable
-  default <T> T getSerializable(final String key, final Class<T> clazz) {
+  default <T> T getSerializable(final String key, final Class<T> type) {
+    return getSerializable(splitPath(key), type);
+  }
+
+  @Nullable
+  default <T> T getSerializable(final String[] key, final Class<T> type) {
     if (contains(key)) {
-      Object raw = get(key);
+      final Object raw = get(key);
       if (raw != null) {
-        return SimplixSerializer.deserialize(raw, clazz);
+        return SimplixSerializer.deserialize(raw, type);
       }
     }
     return null;
   }
 
-  /**
-   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
-   * You will need to register your serializable in the {@link SimplixSerializer} before.<br>
-   * If the key doesn't yet exist, it will be created in the data-structure, set to def and afterward returned.
-   *
-   * @return Serialized instance of class.
-   */
-  @Nullable
-  default <T> T getOrSetSerializable(final String key, final Class<T> clazz, final T def) {
+  @NotNull
+  default <T> T getOrDefSerializable(final String key, final Class<T> type, final T def) {
+    return getOrDefSerializable(splitPath(key), type, def);
+  }
+
+  @NotNull
+  default <T> T getOrDefSerializable(final String[] key, final Class<T> type, final T def) {
     if (contains(key)) {
-      Object raw = get(key);
+      final Object raw = get(key);
       if (raw != null) {
-        return SimplixSerializer.deserialize(raw, clazz);
+        return SimplixSerializer.deserialize(raw, type);
       }
     }
-    setSerializable(key, def);
     return def;
   }
 
@@ -595,29 +892,64 @@ public interface DataStorage {
    * @throws NullPointerException if no serializer for the given class is found
    * @throws ClassCastException if the data does not match
    */
-  @Nullable
-  default <T> Optional<T> findSerializable(final String key, final Class<T> clazz) {
+  @NotNull
+  default <T> Optional<T> findSerializable(final String key, final Class<T> type) {
+    return findSerializable(splitPath(key), type);
+  }
+
+  @NotNull
+  default <T> Optional<T> findSerializable(final String[] key, final Class<T> type) {
     if (contains(key)) {
-      Object raw = get(key);
+      final Object raw = get(key);
       if (raw != null) {
-        return Optional.of(SimplixSerializer.deserialize(raw, clazz));
+        return Optional.of(SimplixSerializer.deserialize(raw, type));
       }
     }
     return Optional.empty();
   }
 
-  @Nullable
+  @NotNull
   default <T> List<T> getSerializableList(final String key, final Class<T> type) {
-    if (!contains(key)) {
-      return null;
-    }
+    return getSerializableList(splitPath(key), type);
+  }
 
+  @NotNull
+  default <T> List<T> getSerializableList(final String[] key, final Class<T> type) {
     final List<?> rawList = getList(key);
+    return SimplixSerializer.deserializeList(rawList, type);
+  }
 
-    return rawList
-        .stream()
-        .map(input -> SimplixSerializer.deserialize(input, type))
-        .collect(Collectors.toList());
+  @NotNull
+  default <T> List<T> getSerializableListFiltered(final String key, final Class<T> type) {
+    return getSerializableListFiltered(splitPath(key), type);
+  }
+
+  @NotNull
+  default <T> List<T> getSerializableListFiltered(final String[] key, final Class<T> type) {
+    final List<?> rawList = getList(key);
+    return SimplixSerializer.deserializeListFiltered(rawList, type);
+  }
+
+  @NotNull
+  default <T> Map<String, T> getSerializableMap(final String key, final Class<T> type) {
+    return getSerializableMap(splitPath(key), type);
+  }
+
+  @NotNull
+  default <T> Map<String, T> getSerializableMap(final String[] key, final Class<T> type) {
+    final Map<?, ?> rawMap = getMap(key);
+    return SimplixSerializer.deserializeMap(rawMap, type);
+  }
+
+  @NotNull
+  default <T> Map<String, T> getSerializableMapFiltered(final String key, final Class<T> type) {
+    return getSerializableMapFiltered(splitPath(key), type);
+  }
+
+  @NotNull
+  default <T> Map<String, T> getSerializableMapFiltered(final String[] key, final Class<T> type) {
+    final Map<?, ?> rawMap = getMap(key);
+    return SimplixSerializer.deserializeMapFiltered(rawMap, type);
   }
 
   // ----------------------------------------------------------------------------------------------------
@@ -632,9 +964,100 @@ public interface DataStorage {
    * @param <T> Type of default-value.
    * @throws ClassCastException if the type is not valid
    */
-  default <T> T getOrDefault(final String key, @NonNull final T def) {
+  default <T> T getOrDefault(final String key, @NotNull final T def) {
     final Object raw = get(key);
     return raw == null ? def : ClassWrapper.getFromDef(raw, def);
+  }
+
+  /**
+   * Returns the value for key in the data-structure, if it exists, else the specified default value.
+   *
+   * @param key Key to data in our data-structure.
+   * @param def Default value, if data-structure doesn't contain key.
+   * @param <T> Type of default-value.
+   * @throws ClassCastException if the type is not valid
+   */
+  default <T> T getOrDefault(final String[] key, @NotNull final T def) {
+    final Object raw = get(key);
+    return raw == null ? def : ClassWrapper.getFromDef(raw, def);
+  }
+
+  /**
+   * Get a List from a data-structure and use a mapper for simple values.<br>
+   * This is for simple values, for complex implementations use a custom serializer instead.
+   *
+   * @param key        Path to List in data structure.
+   * @param mapper     Mapper to parse the list content.
+   * @param rawDefault Default raw List to set and map.
+   */
+  @NotNull
+  default <T> List<T> getOrSetList(final String key, final Function<String, T> mapper, List<String> rawDefault) {
+    return getOrSetList(splitPath(key), mapper, rawDefault);
+  }
+
+  /**
+   * Get a List from a data-structure and use a mapper for simple values.<br>
+   * This is for simple values, for complex implementations use a custom serializer instead.
+   *
+   * @param key        Path to List in data structure.
+   * @param mapper     Mapper to parse the list content.
+   * @param rawDefault Default raw List to set and map.
+   */
+  @NotNull
+  default <T> List<T> getOrSetList(final String[] key, final Function<String, T> mapper, List<String> rawDefault) {
+    return getOrDefault(key, rawDefault).stream().map(mapper).collect(Collectors.toList());
+  }
+
+  /**
+   * Get a List from a data-structure and use a mapper for simple values.<br>
+   * Also filters the null results<br>
+   * This is for simple values, for complex implementations use a custom serializer instead.
+   *
+   * @param key        Path to List in data structure.
+   * @param mapper     Mapper to parse the list content.
+   * @param rawDefault Default raw List to set and map.
+   */
+  @NotNull
+  default <T> List<T> getOrSetListFiltered(final String key, final Function<String, T> mapper, List<String> rawDefault) {
+    return getOrSetListFiltered(splitPath(key), mapper, rawDefault);
+  }
+
+  /**
+   * Get a List from a data-structure and use a mapper for simple values.<br>
+   * Also filters the null results<br>
+   * This is for simple values, for complex implementations use a custom serializer instead.
+   *
+   * @param key        Path to List in data structure.
+   * @param mapper     Mapper to parse the list content.
+   * @param rawDefault Default raw List to set and map.
+   */
+  @NotNull
+  default <T> List<T> getOrSetListFiltered(final String[] key, final Function<String, T> mapper, List<String> rawDefault) {
+    return getOrSetDefault(key, rawDefault).stream().map(mapper).filter(Objects::nonNull).collect(Collectors.toList());
+  }
+
+  /**
+   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializer} before.<br>
+   * If the key doesn't yet exist, it will be created in the data-structure, set to def and afterward returned.
+   *
+   * @return Serialized instance of class.
+   */
+  @NotNull
+  default <T> T getOrSetSerializable(final String key, final Class<T> type, final T def) {
+    return getOrSetSerializable(splitPath(key), type, def);
+  }
+
+  @NotNull
+  default <T> T getOrSetSerializable(final String[] key, final Class<T> type, final T def) {
+    if (contains(key)) {
+      Object raw = get(key);
+      if (raw != null) {
+        return SimplixSerializer.deserialize(raw, type);
+      }
+    }
+    setSerializable(key, def, type);
+    return def;
   }
 
   /**
@@ -645,6 +1068,10 @@ public interface DataStorage {
    * @param value Value to set.
    */
   default void setDefault(final String key, final Object value) {
+    setDefault(splitPath(key), value);
+  }
+
+  default void setDefault(final String[] key, final Object value) {
     if (!contains(key)) {
       set(key, value);
     }
@@ -659,6 +1086,18 @@ public interface DataStorage {
    * @param def Value to set or return.
    */
   default <T> T getOrSetDefault(final String key, final T def) {
+    return getOrSetDefault(splitPath(key), def);
+  }
+
+  /**
+   * Mix of setDefault & getDefault.
+   * <p>Gets the value of the key in the data structure, casted to the type of the specified default def.
+   * If the key doesn't yet exist, it will be created in the data-structure, set to def and afterward returned.</p>
+   *
+   * @param key Key to set the value
+   * @param def Value to set or return.
+   */
+  default <T> T getOrSetDefault(final String[] key, final T def) {
     final Object raw = get(key);
     //Key is not yet present in data-structure
     if (raw == null) {

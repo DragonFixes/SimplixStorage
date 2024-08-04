@@ -4,19 +4,25 @@ import de.leonhard.storage.internal.DataStorage;
 import de.leonhard.storage.internal.FlatFile;
 
 import java.util.Set;
-import java.util.function.Function;
 
-import lombok.Getter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class FlatFileSection implements DataStorage {
 
   protected final FlatFile flatFile;
-  @Getter private final String pathPrefix;
+
+  private final String[] pathPrefix;
+
+  public String getPathPrefix() {
+    return flatFile.createPath(pathPrefix);
+  }
   
   public FlatFileSection getSection(final String pathPrefix) {
+    return getSection(splitPath(pathPrefix));
+  }
+
+  public FlatFileSection getSection(final String[] pathPrefix) {
     return new FlatFileSection(this.flatFile, createFinalKey(pathPrefix));
   }
 
@@ -26,7 +32,7 @@ public class FlatFileSection implements DataStorage {
   }
 
   @Override
-  public Set<String> singleLayerKeySet(final String key) {
+  public Set<String> singleLayerKeySet(final String[] key) {
     return flatFile.singleLayerKeySet(createFinalKey(key));
   }
 
@@ -36,42 +42,36 @@ public class FlatFileSection implements DataStorage {
   }
 
   @Override
-  public Set<String> keySet(final String key) {
+  public Set<String> keySet(final String[] key) {
     return flatFile.keySet(createFinalKey(key));
   }
 
   @Override
-  public void remove(final String key) {
+  public void remove(final String[] key) {
     flatFile.remove(createFinalKey(key));
   }
 
   @Override
-  public void set(final String key, final Object value) {
+  public void set(final String[] key, final Object value) {
     flatFile.set(createFinalKey(key), value);
   }
 
   @Override
-  public boolean contains(final String key) {
+  public boolean contains(final String[] key) {
     return flatFile.contains(createFinalKey(key));
   }
 
   @Override
-  public Object get(final String key) {
+  public String pathSeparator() {
+    return flatFile.pathSeparator();
+  }
+
+  @Override
+  public Object get(final String[] key) {
     return flatFile.get(createFinalKey(key));
   }
 
-  @Override
-  @NonNull
-  public <E extends Enum<E>> E getEnum(String key, Class<E> enumType) {
-    return flatFile.getEnum(createFinalKey(key), enumType);
-  }
-  @Override
-  @NonNull
-  public <E extends Enum<E>> E getEnum(String key, Class<E> enumType, Function<String, String> mapper) {
-    return flatFile.getEnum(createFinalKey(key), enumType, mapper);
-  }
-
-  private String createFinalKey(final String key) {
-    return pathPrefix == null || pathPrefix.isEmpty() ? key : pathPrefix + flatFile.getPathPattern() + key;
+  private String[] createFinalKey(final String[] key) {
+    return (pathPrefix == null || pathPrefix.length == 0) ? key : concatenatePath(this.pathPrefix, key);
   }
 }

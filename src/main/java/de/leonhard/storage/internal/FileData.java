@@ -86,6 +86,16 @@ public class FileData {
     return get(this.localMap, parts, 0);
   }
 
+  /**
+   * Method to get the object assign to a key from a FileData Object.
+   *
+   * @param key the key to look for.
+   * @return the value assigned to the given key or null if the key does not exist.
+   */
+  public Object get(final String[] key) {
+    return get(this.localMap, key, 0);
+  }
+
   private Object get(final Map<String, Object> map, final String[] key, final int id) {
     if (id < key.length - 1) {
       if (map.get(key[id]) instanceof Map) {
@@ -105,13 +115,22 @@ public class FileData {
    * @param key   the key to be used.
    * @param value the value to be assigned to the key.
    */
-  public synchronized void insert(final String key, final Object value) {
-    final String[] parts = key.split(this.pathPattern);
+  public synchronized void insert(final String[] key, final Object value) {
     this.localMap.put(
-            parts[0],
-            this.localMap.containsKey(parts[0]) && this.localMap.get(parts[0]) instanceof Map
-                    ? insert((Map<String, Object>) this.localMap.get(parts[0]), parts, value, 1)
-                    : insert(createNewMap(), parts, value, 1));
+            key[0],
+            this.localMap.containsKey(key[0]) && this.localMap.get(key[0]) instanceof Map
+                    ? insert((Map<String, Object>) this.localMap.get(key[0]), key, value, 1)
+                    : insert(createNewMap(), key, value, 1));
+  }
+
+  /**
+   * Method to assign a value to a key.
+   *
+   * @param key   the key to be used.
+   * @param value the value to be assigned to the key.
+   */
+  public synchronized void insert(final String key, final Object value) {
+    insert(key.split(this.pathPattern), value);
   }
 
   private Object insert(
@@ -141,6 +160,16 @@ public class FileData {
     return containsKey(this.localMap, parts, 0);
   }
 
+  /**
+   * Check whether the map contains a certain key.
+   *
+   * @param key the key to be looked for.
+   * @return true if the key exists, otherwise false.
+   */
+  public boolean containsKey(final String[] key) {
+    return containsKey(this.localMap, key, 0);
+  }
+
   private boolean containsKey(
           final Map<String, Object> map, final String[] key,
           final int id) {
@@ -164,18 +193,29 @@ public class FileData {
   public synchronized void remove(final String key) {
     if (containsKey(key)) {
       final String[] parts = key.split(this.pathPattern);
-      remove(parts);
+      removePr(parts);
     }
   }
 
-  private void remove(final @NotNull String[] key) {
+  /**
+   * Remove a key with its assigned value from the map if given key exists.
+   *
+   * @param key the key to be removed from the map.
+   */
+  public synchronized void remove(final String[] key) {
+    if (containsKey(key)) {
+      removePr(key);
+    }
+  }
+
+  private void removePr(final @NotNull String[] key) {
     if (key.length == 1) {
       this.localMap.remove(key[0]);
     } else {
       final Object tempValue = this.localMap.get(key[0]);
       if (tempValue instanceof Map) {
         //noinspection unchecked
-        this.localMap.put(key[0], this.remove((Map) tempValue, key, 1));
+        this.localMap.put(key[0], this.removePr((Map) tempValue, key, 1));
         if (((Map) this.localMap.get(key[0])).isEmpty()) {
           this.localMap.remove(key[0]);
         }
@@ -183,7 +223,7 @@ public class FileData {
     }
   }
 
-  private Map<String, Object> remove(
+  private Map<String, Object> removePr(
           final Map<String, Object> map,
           final String[] key,
           final int keyIndex) {
@@ -191,7 +231,7 @@ public class FileData {
       final Object tempValue = map.get(key[keyIndex]);
       if (tempValue instanceof Map) {
         //noinspection unchecked
-        map.put(key[keyIndex], this.remove((Map) tempValue, key, keyIndex + 1));
+        map.put(key[keyIndex], this.removePr((Map) tempValue, key, keyIndex + 1));
         if (((Map) map.get(key[keyIndex])).isEmpty()) {
           map.remove(key[keyIndex]);
         }
@@ -224,6 +264,18 @@ public class FileData {
   }
 
   /**
+   * get the keySet of a single layer of the map.
+   *
+   * @param key the key of the layer.
+   * @return the keySet of the given layer or an empty set if the key does not exist.
+   */
+  public Set<String> singleLayerKeySet(final String[] key) {
+    return get(key) instanceof Map
+            ? ((Map<String, Object>) get(key)).keySet()
+            : new HashSet<>();
+  }
+
+  /**
    * get the keySet of all layers of the map combined.
    *
    * @return the keySet of all layers of localMap combined (Format: key.subkey).
@@ -248,6 +300,19 @@ public class FileData {
    * (Format: key.subkey).
    */
   public Set<String> keySet(final String key) {
+    return get(key) instanceof Map
+            ? multiLayerKeySet((Map<String, Object>) get(key))
+            : new HashSet<>();
+  }
+
+  /**
+   * get the keySet of all sublayers of the given key combined.
+   *
+   * @param key the key of the layer
+   * @return the keySet of all sublayers of the given key or an empty set if the key does not exist
+   * (Format: key.subkey).
+   */
+  public Set<String> keySet(final String[] key) {
     return get(key) instanceof Map
             ? multiLayerKeySet((Map<String, Object>) get(key))
             : new HashSet<>();
