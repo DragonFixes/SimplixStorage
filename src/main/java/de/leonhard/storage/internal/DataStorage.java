@@ -270,13 +270,17 @@ public interface DataStorage {
    * @throws SimplixValidationException if an error is found
    */
   default <T> void setSerializableList(@NotNull final String key, @NotNull final List<T> value, @NotNull final Class<T> type) {
+    setSerializableList(splitPath(key), value, type);
+  }
+
+  default <T> void setSerializableList(@NotNull final String[] key, @NotNull final List<T> value, @NotNull final Class<T> type) {
     try {
       final Object data = SimplixSerializer.serializeList(value, type);
       set(key, data);
     } catch (final Throwable throwable) {
       throw SimplixProviders.exceptionHandler().create(
               throwable,
-              "Can't serialize list: '" + key + "'",
+              "Can't serialize list: '" + createPath(key) + "'",
               "Class: '" + value.getClass().getName() + "'",
               "Package: '" + value.getClass().getPackage() + "'");
     }

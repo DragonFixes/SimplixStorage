@@ -19,22 +19,26 @@ import java.util.function.Consumer;
 import lombok.*;
 import org.jetbrains.annotations.Nullable;
 
-@Getter
 @ToString
 @EqualsAndHashCode
 public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
 
+  @Getter
   protected final File file;
+  @Getter
   protected final FileType fileType;
+  @Getter
   @Setter
   protected ReloadSettings reloadSettings = ReloadSettings.INTELLIGENT;
+  @Getter
   protected DataType dataType = DataType.UNSORTED;
   protected FileData fileData;
   @Nullable
+  @Getter
   protected Consumer<FlatFile> reloadConsumer;
-
   protected String[] pathPrefix;
   protected final String pathSeparator;
+  @Getter
   private long lastLoaded;
 
   protected FlatFile(
