@@ -2,11 +2,14 @@ package de.leonhard.storage.internal.exceptions;
 
 import de.leonhard.storage.internal.exception.SimplixException;
 
+import java.io.Serial;
+
 /**
  * Thrown to indicate that something went wrong, or just to end our code
  */
 public class SimplixValidationException extends SimplixException {
 
+  @Serial
   private static final long serialVersionUID = -7961367314553460325L;
 
   public SimplixValidationException(
