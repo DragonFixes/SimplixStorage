@@ -212,6 +212,43 @@ public interface DataStorage {
   }
 
   /**
+   * Get a value or throws an exception if it does not exist or another error occurs.
+   *
+   * @param key Path to value in data-structure
+   * @param type Type of it
+   * @throws SimplixValidationException if the returned value can not be found, cast or another error occurs
+   * @see #getOrDefault(String[], Object)
+   * @see #getRaw(String[], Object)
+   */
+  @NotNull
+  default <T> T getOrThrow(final String[] key, final Class<T> type) {
+    try {
+      final Object raw = Objects.requireNonNull(get(key));
+      return ClassWrapper.getFromDef(raw, type);
+    } catch (ClassCastException e) {
+      throw new SimplixValidationException(e, "Cannot cast the value to the given type for key '" + createPath(key) + "'");
+    } catch (NullPointerException e) {
+      throw new SimplixValidationException(e, "Cannot found a value for key '" + createPath(key) + "'");
+    }catch (Exception e) {
+      throw new SimplixValidationException(e, "An error occurred while getting the key '" + createPath(key) + "'");
+    }
+  }
+
+  /**
+   * Get a value or throws an exception if it does not exist or another error occurs.
+   *
+   * @param key Path to value in data-structure
+   * @param type Type of it
+   * @throws SimplixValidationException if the returned value can not be found, cast or another error occurs
+   * @see #getOrDefault(String[], Object)
+   * @see #getRaw(String[], Object)
+   */
+  @NotNull
+  default <T> T getOrThrow(final String key, final Class<T> type) {
+    return getOrThrow(splitPath(key), type);
+  }
+
+  /**
    * Get a value or null if no present
    *
    * @param key  Path to value in data-structure
