@@ -69,13 +69,20 @@ public class SimplixSerializer {
   /**
    * Deserialize an object into the given type (if available)
    */
-  public <T> T deserialize(final Object raw, Class<T> type) {
+  public <T> T deserialize(final Object raw, final Object data, Class<T> type) {
     final SimplixSerializable<T> serializable = findSerializable(type);
     Valid.notNull(
-        serializable,
-        "No serializable found for '" + type.getSimpleName() + "'",
-        "Raw: '" + raw.getClass().getSimpleName() + "'");
-    return serializable.deserialize(raw);
+            serializable,
+            "No serializable found for '" + type.getSimpleName() + "'",
+            "Raw: '" + raw.getClass().getSimpleName() + "'");
+    return serializable.deserialize(raw, data);
+  }
+
+  /**
+   * Deserialize an object into the given type (if available)
+   */
+  public <T> T deserialize(final Object raw, Class<T> type) {
+    return deserialize(raw, null, type);
   }
 
   /**
@@ -110,12 +117,38 @@ public class SimplixSerializer {
   /**
    * Deserializes a list of objects into the given type (if available)
    */
-  public <T> List<T> deserializeList(final List<?> raw, Class<T> type) {
+  public <T> List<T> deserializeList(final List<?> raw, final Object data, Class<T> type) {
+
     final SimplixSerializable<T> serializable = findSerializable(type);
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
-    return raw.stream().map(o -> serializable.deserialize(o)).toList();
+    return raw.stream().map(o -> serializable.deserialize(o, data)).toList();
+  }
+
+  /**
+   * Deserializes a list of objects into the given type (if available)
+   */
+  public <T> List<T> deserializeList(final List<?> raw, Class<T> type) {
+    return deserializeList(raw, null, type);
+  }
+
+  /**
+   * Deserializes a list of objects into the given type (if available)<br>
+   * Also handles every result and filters each one.
+   */
+  public <T> List<T> deserializeListFiltered(final List<?> raw, final Object data, Class<T> type) {
+    final SimplixSerializable<T> serializable = findSerializable(type);
+    Valid.notNull(
+            serializable,
+            "No serializable found for '" + type.getSimpleName() + "'");
+    return raw.stream().map(o -> {
+      try {
+        return serializable.deserialize(o, data);
+      } catch (Throwable e) {
+        return null;
+      }
+    }).filter(Objects::nonNull).toList();
   }
 
   /**
@@ -123,17 +156,7 @@ public class SimplixSerializer {
    * Also handles every result and filters each one.
    */
   public <T> List<T> deserializeListFiltered(final List<?> raw, Class<T> type) {
-    final SimplixSerializable<T> serializable = findSerializable(type);
-    Valid.notNull(
-            serializable,
-            "No serializable found for '" + type.getSimpleName() + "'");
-    return raw.stream().map(o -> {
-      try {
-        return serializable.deserialize(o);
-      } catch (Throwable e) {
-        return null;
-      }
-    }).filter(Objects::nonNull).toList();
+    return deserializeListFiltered(raw, null, type);
   }
 
   /**
@@ -173,14 +196,40 @@ public class SimplixSerializer {
   /**
    * Deserialize a map of objects into the given type (if available)
    */
-  public <T> Map<String, T> deserializeMap(final Map<?, ?> raw, Class<T> type) {
+  public <T> Map<String, T> deserializeMap(final Map<?, ?> raw, final Object data, Class<T> type) {
     final SimplixSerializable<T> serializable = findSerializable(type);
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
     final Map<String, T> map = new HashMap<>();
     for (Map.Entry<?, ?> e : raw.entrySet()) {
-      map.put((String) e.getKey(), serializable.deserialize(e.getValue()));
+      map.put((String) e.getKey(), serializable.deserialize(e.getValue(), data));
+    }
+    return map;
+  }
+
+  /**
+   * Deserialize a map of objects into the given type (if available)
+   */
+  public <T> Map<String, T> deserializeMap(final Map<?, ?> raw, Class<T> type) {
+    return deserializeMap(raw, null, type);
+  }
+
+  /**
+   * Deserialize a map of objects into the given type (if available)<br>
+   * Also handles every result and filters each one.
+   */
+  public <T> Map<String, T> deserializeMapFiltered(final Map<?, ?> raw, final Object data, Class<T> type) {
+    final SimplixSerializable<T> serializable = findSerializable(type);
+    Valid.notNull(
+            serializable,
+            "No serializable found for '" + type.getSimpleName() + "'");
+    final Map<String, T> map = new HashMap<>();
+    for (Map.Entry<?, ?> e : raw.entrySet()) {
+      try {
+        map.put((String) e.getKey(), serializable.deserialize(e.getValue(), data));
+      } catch (Throwable ex) {
+      }
     }
     return map;
   }
@@ -190,17 +239,6 @@ public class SimplixSerializer {
    * Also handles every result and filters each one.
    */
   public <T> Map<String, T> deserializeMapFiltered(final Map<?, ?> raw, Class<T> type) {
-    final SimplixSerializable<T> serializable = findSerializable(type);
-    Valid.notNull(
-            serializable,
-            "No serializable found for '" + type.getSimpleName() + "'");
-    final Map<String, T> map = new HashMap<>();
-    for (Map.Entry<?, ?> e : raw.entrySet()) {
-      try {
-        map.put((String) e.getKey(), serializable.deserialize(e.getValue()));
-      } catch (Throwable ex) {
-      }
-    }
-    return map;
+    return deserializeMapFiltered(raw, null, type);
   }
 }

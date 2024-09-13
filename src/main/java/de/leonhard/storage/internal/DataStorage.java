@@ -1318,6 +1318,23 @@ public interface DataStorage {
    * @return Serialized instance of class.
    */
   @Nullable
+  default <T> T getSerializable(final String[] key, final Object data, final Class<T> type) {
+    if (contains(key)) {
+      final Object raw = get(key);
+      if (raw != null) {
+        return SimplixSerializer.deserialize(raw, data, type);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializer} before.
+   *
+   * @return Serialized instance of class.
+   */
+  @Nullable
   default <T> T getSerializable(final String[] key, final Class<T> type) {
     if (contains(key)) {
       final Object raw = get(key);
@@ -1340,6 +1357,17 @@ public interface DataStorage {
   }
 
   @NotNull
+  default <T> T getOrDefSerializable(final String[] key, final Object data, final Class<T> type, final T def) {
+    if (contains(key)) {
+      final Object raw = get(key);
+      if (raw != null) {
+        return SimplixSerializer.deserialize(raw, data, type);
+      }
+    }
+    return def;
+  }
+
+  @NotNull
   default <T> T getOrDefSerializable(final String[] key, final Class<T> type, final T def) {
     if (contains(key)) {
       final Object raw = get(key);
@@ -1353,6 +1381,25 @@ public interface DataStorage {
   @NotNull
   default <T> T getOrDefSerializable(final String key, final Class<T> type, final T def) {
     return getOrDefSerializable(splitPath(key), type, def);
+  }
+
+  /**
+   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializer} before.
+   *
+   * @return Serialized instance of class.
+   * @throws NullPointerException if no serializer for the given class is found
+   * @throws ClassCastException if the data does not match
+   */
+  @NotNull
+  default <T> Optional<T> findSerializable(final String[] key, final Object data, final Class<T> type) {
+    if (contains(key)) {
+      final Object raw = get(key);
+      if (raw != null) {
+        return Optional.of(SimplixSerializer.deserialize(raw, data, type));
+      }
+    }
+    return Optional.empty();
   }
 
   /**
@@ -1388,6 +1435,12 @@ public interface DataStorage {
   }
 
   @NotNull
+  default <T> List<T> getSerializableList(final String[] key, final Object data, final Class<T> type) {
+    final List<?> rawList = getList(key);
+    return SimplixSerializer.deserializeList(rawList, data, type);
+  }
+
+  @NotNull
   default <T> List<T> getSerializableList(final String[] key, final Class<T> type) {
     final List<?> rawList = getList(key);
     return SimplixSerializer.deserializeList(rawList, type);
@@ -1396,6 +1449,12 @@ public interface DataStorage {
   @NotNull
   default <T> List<T> getSerializableList(final String key, final Class<T> type) {
     return getSerializableList(splitPath(key), type);
+  }
+
+  @NotNull
+  default <T> List<T> getSerializableListFiltered(final String[] key, final Object data, final Class<T> type) {
+    final List<?> rawList = getList(key);
+    return SimplixSerializer.deserializeListFiltered(rawList, data, type);
   }
 
   @NotNull
@@ -1410,6 +1469,12 @@ public interface DataStorage {
   }
 
   @NotNull
+  default <T> Map<String, T> getSerializableMap(final String[] key, final Object data, final Class<T> type) {
+    final Map<?, ?> rawMap = getMap(key);
+    return SimplixSerializer.deserializeMap(rawMap, data, type);
+  }
+
+  @NotNull
   default <T> Map<String, T> getSerializableMap(final String[] key, final Class<T> type) {
     final Map<?, ?> rawMap = getMap(key);
     return SimplixSerializer.deserializeMap(rawMap, type);
@@ -1418,6 +1483,12 @@ public interface DataStorage {
   @NotNull
   default <T> Map<String, T> getSerializableMap(final String key, final Class<T> type) {
     return getSerializableMap(splitPath(key), type);
+  }
+
+  @NotNull
+  default <T> Map<String, T> getSerializableMapFiltered(final String[] key, final Object data, final Class<T> type) {
+    final Map<?, ?> rawMap = getMap(key);
+    return SimplixSerializer.deserializeMapFiltered(rawMap, data, type);
   }
 
   @NotNull
@@ -1513,6 +1584,25 @@ public interface DataStorage {
   @NotNull
   default <T> List<T> getOrSetListFiltered(final String key, final Function<String, T> mapper, List<String> rawDefault) {
     return getOrSetListFiltered(splitPath(key), mapper, rawDefault);
+  }
+
+  /**
+   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializer} before.<br>
+   * If the key doesn't yet exist, it will be created in the data-structure, set to def and afterward returned.
+   *
+   * @return Serialized instance of class.
+   */
+  @NotNull
+  default <T> T getOrSetSerializable(final String[] key, final Object data, final Class<T> type, final T def) {
+    if (contains(key)) {
+      Object raw = get(key);
+      if (raw != null) {
+        return SimplixSerializer.deserialize(raw, data, type);
+      }
+    }
+    setSerializable(key, def, type);
+    return def;
   }
 
   /**
