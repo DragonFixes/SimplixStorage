@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -84,7 +85,7 @@ public interface DataStorage {
    * @return A string array split by the separator of this file.
    */
   default String[] splitPath(String path) {
-    return path.split(pathSeparator());
+    return path.split(Pattern.quote(pathSeparator()));
   }
 
   /**
