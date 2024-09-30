@@ -1,5 +1,6 @@
 package de.leonhard.storage.internal;
 
+import de.leonhard.storage.internal.serialize.SimplixSerializer;
 import de.leonhard.storage.internal.settings.DataType;
 import de.leonhard.storage.util.JsonUtils;
 
@@ -131,6 +132,66 @@ public class FileData {
    */
   public synchronized void insert(final String key, final Object value) {
     insert(key.split(this.pathPattern), value);
+  }
+
+  /**
+   * Method to assign a value to a key.
+   *
+   * @param key   the key to be used.
+   * @param value the value to be assigned to the key.
+   */
+  public synchronized <T> void insertSerializable(final String[] key, final T value, final Class<T> type) {
+    insert(key, SimplixSerializer.serialize(value, type));
+  }
+
+  /**
+   * Method to assign a value to a key.
+   *
+   * @param key   the key to be used.
+   * @param value the value to be assigned to the key.
+   */
+  public synchronized <T> void insertSerializable(final String key, final T value, final Class<T> type) {
+    insertSerializable(key.split(this.pathPattern), value, type);
+  }
+
+  /**
+   * Method to assign a value to a key.
+   *
+   * @param key   the key to be used.
+   * @param value the value to be assigned to the key.
+   */
+  public synchronized <T> void insertSerializableList(final String[] key, final List<T> value, final Class<T> type) {
+    insert(key, SimplixSerializer.serializeList(value, type));
+  }
+
+  /**
+   * Method to assign a value to a key.
+   *
+   * @param key   the key to be used.
+   * @param value the value to be assigned to the key.
+   */
+  public synchronized <T> void insertSerializableList(final String key, final List<T> value, final Class<T> type) {
+    insertSerializableList(key.split(this.pathPattern), value, type);
+  }
+
+  /**
+   * Method to assign a value to a key.
+   *
+   * @param key   the key to be used.
+   * @param value the value to be assigned to the key.
+   */
+  public synchronized <T> void insertSerializableMap(final String[] key, final Map<String, T> value, final Class<T> type) {
+    insert(key, SimplixSerializer.serializeMap(value, type));
+  }
+
+  /**
+   * Method to assign a value to a key.
+   *
+   * @param key   the key to be used.
+   * @param value the value to be assigned to the key.
+   */
+  public synchronized <T> void insertSerializableMap(final String key, final Map<String, T> value, final Class<T> type) {
+    insertSerializableMap(key.split(this.pathPattern), value, type);
   }
 
   private Object insert(

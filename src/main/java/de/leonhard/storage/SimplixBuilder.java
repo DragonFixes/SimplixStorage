@@ -166,7 +166,7 @@ public final class SimplixBuilder {
         this.reloadSettings,
         this.configSettings,
         this.dataType,
-            this.pathPattern,
+        this.pathPattern,
         reloadConsumer);
   }
 

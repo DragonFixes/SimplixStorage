@@ -186,7 +186,6 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     final String[] finalKey = (this.pathPrefix == null) ? key : concatenatePath(this.pathPrefix, key);
     this.fileData.insert(finalKey, value);
     write();
-    this.lastLoaded = System.currentTimeMillis();
   }
 
 
