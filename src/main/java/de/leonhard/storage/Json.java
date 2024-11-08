@@ -3,6 +3,7 @@ package de.leonhard.storage;
 import de.leonhard.storage.internal.FileData;
 import de.leonhard.storage.internal.FileType;
 import de.leonhard.storage.internal.FlatFile;
+import de.leonhard.storage.internal.settings.ErrorHandler;
 import de.leonhard.storage.internal.settings.ReloadSettings;
 import de.leonhard.storage.util.FileUtils;
 import lombok.Cleanup;
@@ -61,6 +62,16 @@ public class Json extends FlatFile {
           @Nullable final ReloadSettings reloadSettings,
           @Nullable final String pathPattern,
           @Nullable final Consumer<FlatFile> reloadConsumer) {
+    this(name, path, inputStream, reloadSettings, null, pathPattern, reloadConsumer);
+  }
+
+  public Json(final String name,
+          @Nullable final String path,
+          @Nullable final InputStream inputStream,
+          @Nullable final ReloadSettings reloadSettings,
+          @Nullable final ErrorHandler errorHandler,
+          @Nullable final String pathPattern,
+          @Nullable final Consumer<FlatFile> reloadConsumer) {
     super(name, path, FileType.JSON, pathPattern, reloadConsumer);
 
     if ((create() || this.file.length() == 0) && inputStream != null) {
@@ -70,6 +81,11 @@ public class Json extends FlatFile {
     if (reloadSettings != null) {
       this.reloadSettings = reloadSettings;
     }
+
+    if (errorHandler != null) {
+      this.errorHandler = errorHandler;
+    }
+
     forceReload();
   }
 

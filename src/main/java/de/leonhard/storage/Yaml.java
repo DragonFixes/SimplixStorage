@@ -9,6 +9,7 @@ import de.leonhard.storage.internal.editor.yaml.YamlEditor;
 import de.leonhard.storage.internal.editor.yaml.YamlParser;
 import de.leonhard.storage.internal.settings.ConfigSettings;
 import de.leonhard.storage.internal.settings.DataType;
+import de.leonhard.storage.internal.settings.ErrorHandler;
 import de.leonhard.storage.internal.settings.ReloadSettings;
 import de.leonhard.storage.logger.LoggerInfo;
 import de.leonhard.storage.util.FileUtils;
@@ -87,6 +88,18 @@ public class Yaml extends FlatFile {
           @Nullable final DataType dataType,
           @Nullable final String pathPattern,
           @Nullable final Consumer<FlatFile> reloadConsumer) {
+    this(name, path, inputStream, reloadSettings, null, configSettings, dataType, null, reloadConsumer);
+  }
+
+  public Yaml(final String name,
+          @Nullable final String path,
+          @Nullable final InputStream inputStream,
+          @Nullable final ReloadSettings reloadSettings,
+          @Nullable final ErrorHandler errorHandler,
+          @Nullable final ConfigSettings configSettings,
+          @Nullable final DataType dataType,
+          @Nullable final String pathPattern,
+          @Nullable final Consumer<FlatFile> reloadConsumer) {
     super(name, path, FileType.YAML, pathPattern, reloadConsumer);
     this.inputStream = inputStream;
 
@@ -99,6 +112,10 @@ public class Yaml extends FlatFile {
 
     if (reloadSettings != null) {
       this.reloadSettings = reloadSettings;
+    }
+
+    if (errorHandler != null) {
+      this.errorHandler = errorHandler;
     }
 
     if (configSettings != null) {
@@ -130,6 +147,10 @@ public class Yaml extends FlatFile {
     reloadIfNeeded();
     // Creating & setting defaults
     if (inputStream == null) {
+      return this;
+    }
+    if (shouldSetEmpty()) {
+      LoggerInfo.getLogger().sendWarning("Tried to write values but is lock by an error!");
       return this;
     }
 

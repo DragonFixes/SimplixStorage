@@ -1,5 +1,6 @@
 package de.leonhard.storage.internal;
 
+import de.leonhard.storage.internal.settings.ErrorHandler;
 import de.leonhard.storage.logger.LoggerInfo;
 import de.leonhard.storage.annotation.ConfigPath;
 import de.leonhard.storage.internal.provider.SimplixProviders;
@@ -31,25 +32,34 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   @Setter
   protected ReloadSettings reloadSettings = ReloadSettings.INTELLIGENT;
   @Getter
+  @Setter
+  protected ErrorHandler errorHandler = ErrorHandler.CLEAR;
+  @Getter
   protected DataType dataType = DataType.UNSORTED;
   protected FileData fileData;
   @Nullable
   @Getter
   protected Consumer<FlatFile> reloadConsumer;
+  @Nullable
+  @Getter
+  protected Consumer<FlatFile> errorConsumer;
   protected String[] pathPrefix;
   protected final String pathSeparator;
   @Getter
   private long lastLoaded;
+  private boolean errorLock = false;
 
   protected FlatFile(
       @NonNull final String name,
       @Nullable final String path,
       @NonNull final FileType fileType,
       @Nullable final String pathSeparator,
-      @Nullable final Consumer<FlatFile> reloadConsumer) {
+      @Nullable final Consumer<FlatFile> reloadConsumer,
+      @Nullable final Consumer<FlatFile> errorConsumer) {
     Valid.checkBoolean(!name.isEmpty(), "Name mustn't be empty");
     this.fileType = fileType;
     this.reloadConsumer = reloadConsumer;
+    this.errorConsumer = errorConsumer;
     this.pathSeparator = Objects.requireNonNullElse(pathSeparator, ".");
     if (path == null || path.isEmpty()) {
       this.file = new File(FileUtils.replaceExtensions(name) + "." + fileType.getExtension());
@@ -62,6 +72,14 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
           + "."
           + fileType.getExtension());
     }
+  }
+  protected FlatFile(
+          @NonNull final String name,
+          @Nullable final String path,
+          @NonNull final FileType fileType,
+          @Nullable final String pathSeparator,
+          @Nullable final Consumer<FlatFile> reloadConsumer) {
+    this(name, path, fileType, pathSeparator, reloadConsumer, null);
   }
 
   protected FlatFile(
@@ -77,6 +95,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     this.fileType = fileType;
     this.pathSeparator = Objects.requireNonNullElse(pathSeparator, ".");
     this.reloadConsumer = null;
+    this.errorConsumer = null;
     Valid.checkBoolean(
         fileType == FileType.fromExtension(file),
         "Invalid file-extension for file type: '" + fileType + "'",
@@ -95,6 +114,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   protected FlatFile(@NonNull final File file, @Nullable String pathSeparator) {
     this.file = file;
     this.reloadConsumer = null;
+    this.errorConsumer = null;
     this.pathSeparator = pathSeparator;
     // Might be null
     this.fileType = FileType.fromFile(file);
@@ -125,6 +145,14 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
 
   public String getPathPrefix() {
     return createPath(pathPrefix);
+  }
+
+  protected boolean shouldGetEmpty() {
+    return errorLock && errorHandler == ErrorHandler.EMPTY;
+  }
+
+  protected boolean shouldSetEmpty() {
+    return errorLock && (errorHandler == ErrorHandler.EMPTY || errorHandler == ErrorHandler.KEEP);
   }
 
   // ----------------------------------------------------------------------------------------------------
@@ -183,6 +211,10 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   @Override
   public synchronized void set(final String[] key, final Object value) {
     reloadIfNeeded();
+    if (shouldSetEmpty()) {
+      LoggerInfo.getLogger().sendWarning("Tried to set value to path '" + createPath(key) + "' but is lock by an error!");
+      return;
+    }
     final String[] finalKey = (this.pathPrefix == null) ? key : concatenatePath(this.pathPrefix, key);
     this.fileData.insert(finalKey, value);
     write();
@@ -192,6 +224,9 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   @Override
   public final Object get(final String[] key) {
     reloadIfNeeded();
+    if (shouldGetEmpty()) {
+      return null;
+    }
     final String[] finalKey = (this.pathPrefix == null) ? key : concatenatePath(this.pathPrefix, key);
     return getFileData().get(finalKey);
   }
@@ -210,6 +245,9 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   @Override
   public final boolean contains(final String[] key) {
     reloadIfNeeded();
+    if (shouldGetEmpty()) {
+      return false;
+    }
     final String[] finalKey = (this.pathPrefix == null) ? key : concatenatePath(this.pathPrefix, key);
     return this.fileData.containsKey(finalKey);
   }
@@ -217,36 +255,55 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   @Override
   public final Set<String> singleLayerKeySet() {
     reloadIfNeeded();
+    if (shouldGetEmpty()) {
+      return Collections.emptySet();
+    }
     return this.fileData.singleLayerKeySet();
   }
 
   @Override
   public final Set<String> singleLayerKeySet(final String[] key) {
     reloadIfNeeded();
+    if (shouldGetEmpty()) {
+      return Collections.emptySet();
+    }
     return this.fileData.singleLayerKeySet(key);
   }
 
   @Override
   public final Set<String> keySet() {
     reloadIfNeeded();
+    if (shouldGetEmpty()) {
+      return Collections.emptySet();
+    }
     return this.fileData.keySet();
   }
 
   @Override
   public final Set<String> keySet(final String key) {
     reloadIfNeeded();
+    if (shouldGetEmpty()) {
+      return Collections.emptySet();
+    }
     return this.fileData.keySet(key);
   }
 
   @Override
   public final Set<String> keySet(final String[] key) {
     reloadIfNeeded();
+    if (shouldGetEmpty()) {
+      return Collections.emptySet();
+    }
     return this.fileData.keySet(key);
   }
 
   @Override
   public final synchronized void remove(final String[] key) {
     reloadIfNeeded();
+    if (shouldSetEmpty()) {
+      LoggerInfo.getLogger().sendWarning("Tried to remove value from path '" + createPath(key) + "' but is lock by an error!");
+      return;
+    }
     this.fileData.remove(key);
     write();
   }
@@ -261,7 +318,19 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
    * @param map Map to insert.
    */
   public final void putAll(final Map<String, Object> map) {
+    if (shouldSetEmpty()) {
+      LoggerInfo.getLogger().sendWarning("Tried to set values but is lock by an error!");
+      return;
+    }
     this.fileData.putAll(map);
+    write();
+  }
+  public final void putAllRaw(final Map<String[], Object> map) {
+    if (shouldSetEmpty()) {
+      LoggerInfo.getLogger().sendWarning("Tried to set values but is lock by an error!");
+      return;
+    }
+    this.fileData.putAllRaw(map);
     write();
   }
 
@@ -269,13 +338,19 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
    * @return The data of our file as a Map<String, Object>
    */
   public final Map<String, Object> getData() {
+    if (shouldGetEmpty()) {
+      return Collections.emptyMap();
+    }
     return getFileData().toMap();
   }
 
   // For performance separated from get(String key)
   public final List<Object> getAll(final String... keys) {
-    final List<Object> result = new ArrayList<>();
     reloadIfNeeded();
+    if (shouldGetEmpty()) {
+      return Collections.emptyList();
+    }
+    final List<Object> result = new ArrayList<>();
 
     for (final String key : keys) {
       result.add(get(key));
@@ -286,6 +361,9 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
 
   public final List<Object> getAllRaw(final String[]... keys) {
     reloadIfNeeded();
+    if (shouldGetEmpty()) {
+      return Collections.emptyList();
+    }
     final List<Object> result = new ArrayList<>();
 
     for (final String[] key : keys) {
@@ -296,6 +374,10 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   }
 
   public void removeAll(final String... keys) {
+    if (shouldSetEmpty()) {
+      LoggerInfo.getLogger().sendWarning("Tried to remove values but is lock by an error!");
+      return;
+    }
     for (final String key : keys) {
       this.fileData.remove(key);
     }
@@ -303,6 +385,10 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   }
 
   public void removeAllRaw(final String[]... keys) {
+    if (shouldSetEmpty()) {
+      LoggerInfo.getLogger().sendWarning("Tried to remove values but is lock by an error!");
+      return;
+    }
     for (final String[] key : keys) {
       this.fileData.remove(key);
     }
@@ -319,6 +405,10 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
 
   public final void addDefaultsFromFileData(@NonNull final FileData newData) {
     reloadIfNeeded();
+    if (shouldSetEmpty()) {
+      LoggerInfo.getLogger().sendWarning("Tried to set values but is lock by an error!");
+      return;
+    }
 
     // Creating & setting defaults
     for (final String key : newData.keySet()) {
@@ -345,6 +435,10 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   public synchronized void replace(
       final CharSequence target,
       final CharSequence replacement) throws IOException {
+    if (shouldSetEmpty()) {
+      LoggerInfo.getLogger().sendWarning("Tried to replace values but is lock by an error!");
+      return;
+    }
     final List<String> lines = Files.readAllLines(this.file.toPath());
     final List<String> result = new ArrayList<>();
     for (final String line : lines) {
@@ -357,8 +451,6 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     try {
       write(this.fileData);
     } catch (final IOException ex) {
-      LoggerInfo.getLogger().printMessage("Exception writing to file '" + getName() + "'");
-      LoggerInfo.getLogger().printMessage("In '" + FileUtils.getParentDirPath(this.file) + "'");
       LoggerInfo.getLogger().sendError("Exception writing to file '" + getName() + "'");
       LoggerInfo.getLogger().sendError("In '" + FileUtils.getParentDirPath(this.file) + "'");
       LoggerInfo.getLogger().printStackTrace(ex);
@@ -374,16 +466,35 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     Map<String, Object> out = new HashMap<>();
     try {
       out = readToMap();
+      errorLock = false;
     } catch (final IOException ex) {
       handleReloadException(ex);
+      errorLock = true;
     } finally {
-      if (this.fileData == null) {
-        this.fileData = new FileData(out, this.dataType, pathSeparator());
-      } else {
-        this.fileData.loadData(out);
+      boolean shouldWrite = true;
+      if (errorLock) {
+        switch (errorHandler) {
+          case ROLLBACK -> {
+            if (fileData != null)
+              out = this.fileData.toMap(); // returns old config
+          }
+          case KEEP, EMPTY -> shouldWrite = false; // disallows the file write
+          // CLEAR ->  default behavior (always clears)
+        }
+      }
+
+      if (shouldWrite) {
+        if (this.fileData == null) {
+          this.fileData = new FileData(out, this.dataType, pathSeparator());
+        } else {
+          this.fileData.loadData(out);
+        }
       }
       this.lastLoaded = System.currentTimeMillis();
-      if (this.reloadConsumer != null) {
+      if (errorLock && this.errorConsumer != null) {
+        this.errorConsumer.accept(this);
+      }
+      if (shouldWrite && this.reloadConsumer != null) {
         this.reloadConsumer.accept(this);
       }
     }

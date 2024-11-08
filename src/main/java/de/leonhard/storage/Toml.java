@@ -4,6 +4,7 @@ import de.leonhard.storage.internal.FileData;
 import de.leonhard.storage.internal.FileType;
 import de.leonhard.storage.internal.FlatFile;
 import de.leonhard.storage.internal.editor.toml.TomlManager;
+import de.leonhard.storage.internal.settings.ErrorHandler;
 import de.leonhard.storage.internal.settings.ReloadSettings;
 import de.leonhard.storage.logger.LoggerInfo;
 import de.leonhard.storage.util.FileUtils;
@@ -49,6 +50,18 @@ public class Toml extends FlatFile {
           @Nullable final String pathPattern,
           @Nullable final Consumer<FlatFile> reloadConsumer
   ) {
+    this(name, path, inputStream, reloadSettings, null, pathPattern, reloadConsumer);
+  }
+
+  public Toml(
+          @NonNull final String name,
+          @NonNull final String path,
+          @Nullable final InputStream inputStream,
+          @Nullable final ReloadSettings reloadSettings,
+          @Nullable final ErrorHandler errorHandler,
+          @Nullable final String pathPattern,
+          @Nullable final Consumer<FlatFile> reloadConsumer
+  ) {
     super(name, path, FileType.TOML, pathPattern, reloadConsumer);
 
     if (create() && inputStream != null) {
@@ -57,6 +70,10 @@ public class Toml extends FlatFile {
 
     if (reloadSettings != null) {
       this.reloadSettings = reloadSettings;
+    }
+
+    if (errorHandler != null) {
+      this.errorHandler = errorHandler;
     }
 
     forceReload();

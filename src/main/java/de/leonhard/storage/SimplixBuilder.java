@@ -5,6 +5,7 @@ import de.leonhard.storage.internal.provider.InputStreamProvider;
 import de.leonhard.storage.internal.provider.SimplixProviders;
 import de.leonhard.storage.internal.settings.ConfigSettings;
 import de.leonhard.storage.internal.settings.DataType;
+import de.leonhard.storage.internal.settings.ErrorHandler;
 import de.leonhard.storage.internal.settings.ReloadSettings;
 import de.leonhard.storage.util.FileUtils;
 import de.leonhard.storage.util.Valid;
@@ -23,6 +24,7 @@ public final class SimplixBuilder {
   private String name;
   private InputStream inputStream;
   private ReloadSettings reloadSettings;
+  private ErrorHandler errorHandler;
   private ConfigSettings configSettings;
   private DataType dataType;
   private String pathPattern = null;
@@ -106,6 +108,11 @@ public final class SimplixBuilder {
     return this;
   }
 
+  public SimplixBuilder setErrorHandler(@Nullable final ErrorHandler errorHandler) {
+    this.errorHandler = errorHandler;
+    return this;
+  }
+
   public SimplixBuilder setConfigSettings(@NonNull final ConfigSettings configSettings) {
     this.configSettings = configSettings;
     return this;
@@ -164,6 +171,7 @@ public final class SimplixBuilder {
         this.path,
         this.inputStream,
         this.reloadSettings,
+        this.errorHandler,
         this.configSettings,
         this.dataType,
         this.pathPattern,
@@ -176,6 +184,7 @@ public final class SimplixBuilder {
         this.path,
         this.inputStream,
         this.reloadSettings,
+        this.errorHandler,
         this.pathPattern,
         reloadConsumer);
   }
@@ -186,6 +195,7 @@ public final class SimplixBuilder {
         this.path,
         this.inputStream,
         this.reloadSettings,
+        this.errorHandler,
         this.pathPattern,
         reloadConsumer);
   }
