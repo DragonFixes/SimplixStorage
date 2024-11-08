@@ -20,6 +20,16 @@ public class JavaLogger implements LoggerModel {
     }
 
     @Override
+    public void sendWarning(String message) {
+        logger.warning(message);
+    }
+
+    @Override
+    public void sendError(String message) {
+        logger.severe(message);
+    }
+
+    @Override
     public void printStackTrace(Exception exception) {
         logger.log(Level.WARNING, "An error occurred.", exception);
     }

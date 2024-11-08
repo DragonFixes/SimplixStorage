@@ -172,8 +172,8 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     final String fileName = this.fileType == null
         ? "File"
         : this.fileType.name().toLowerCase(); // fileType might be null
-    LoggerInfo.getLogger().printMessage("Exception reloading " + fileName + " '" + getName() + "'");
-    LoggerInfo.getLogger().printMessage("In '" + FileUtils.getParentDirPath(this.file) + "'");
+    LoggerInfo.getLogger().sendError("Exception reloading " + fileName + " '" + getName() + "'");
+    LoggerInfo.getLogger().sendError("In '" + FileUtils.getParentDirPath(this.file) + "'");
     LoggerInfo.getLogger().printStackTrace(ioException);
   }
   // ----------------------------------------------------------------------------------------------------
@@ -188,7 +188,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     write();
   }
 
-
+  @Nullable
   @Override
   public final Object get(final String[] key) {
     reloadIfNeeded();
@@ -284,8 +284,26 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     return result;
   }
 
+  public final List<Object> getAllRaw(final String[]... keys) {
+    reloadIfNeeded();
+    final List<Object> result = new ArrayList<>();
+
+    for (final String[] key : keys) {
+      result.add(get(key));
+    }
+
+    return result;
+  }
+
   public void removeAll(final String... keys) {
     for (final String key : keys) {
+      this.fileData.remove(key);
+    }
+    write();
+  }
+
+  public void removeAllRaw(final String[]... keys) {
+    for (final String[] key : keys) {
       this.fileData.remove(key);
     }
     write();
@@ -341,6 +359,8 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     } catch (final IOException ex) {
       LoggerInfo.getLogger().printMessage("Exception writing to file '" + getName() + "'");
       LoggerInfo.getLogger().printMessage("In '" + FileUtils.getParentDirPath(this.file) + "'");
+      LoggerInfo.getLogger().sendError("Exception writing to file '" + getName() + "'");
+      LoggerInfo.getLogger().sendError("In '" + FileUtils.getParentDirPath(this.file) + "'");
       LoggerInfo.getLogger().printStackTrace(ex);
     }
     this.lastLoaded = System.currentTimeMillis();

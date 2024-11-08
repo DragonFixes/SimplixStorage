@@ -380,6 +380,27 @@ public interface DataStorage {
    * Optional#empty()} if the value wasn't found.
    *
    * @param key  Key to search the value for
+   */
+  default Optional<Object> findRaw(final String[] key) {
+    return Optional.ofNullable(get(key));
+  }
+
+  /**
+   * Method to get a value of a predefined type from our data structure will return {@link
+   * Optional#empty()} if the value wasn't found.
+   *
+   * @param key  Key to search the value for
+   * @see #getOrThrow(String, Object)
+   */
+  default Optional<Object> findRaw(final String key) {
+    return findRaw(splitPath(key));
+  }
+
+  /**
+   * Method to get a value of a predefined type from our data structure will return {@link
+   * Optional#empty()} if the value wasn't found.
+   *
+   * @param key  Key to search the value for
    * @param type Type of the value
    * @see #getOrThrow(String[], Object)
    */
@@ -556,38 +577,103 @@ public interface DataStorage {
   }
 
   /**
-   * Get a List from a data-structure and use a mapper for simple values.<br>
-   * This is for simple values, for complex implementations use a custom serializer instead.
+   * Get a List from a data-structure and use a mapper for their content.
    *
    * @param key    Path to List in data structure.
    * @param mapper Mapper to parse the list content.
    */
   @NotNull
-  default <T> List<T> getList(final String key, final Function<String, T> mapper) {
+  default <T> List<T> getList(final String key, final Function<Object, T> mapper) {
     return getList(splitPath(key), mapper);
   }
 
+  /**
+   * Get a List from a data-structure and use a mapper for their content.
+   *
+   * @param key    Path to List in data structure.
+   * @param mapper Mapper to parse the list content.
+   */
   @NotNull
-  default <T> List<T> getList(final String[] key, final Function<String, T> mapper) {
-    return getOrDefault(key, new ArrayList<String>()).stream().map(mapper).collect(Collectors.toList());
+  default <T> List<T> getList(final String[] key, final Function<Object, T> mapper) {
+    final Object raw = get(key);
+    return raw == null ? new ArrayList<>() : ClassWrapper.getFromDef(raw, new ArrayList<>()).stream().map(mapper).toList();
+  }
+
+  /**
+   * Get a List from a data-structure and use a mapper for their content.<br>
+   * Also filters the null results.
+   *
+   * @param key    Path to List in data structure.
+   * @param mapper Mapper to parse the list content.
+   */
+  @NotNull
+  default <T> List<T> getListFiltered(final String key, final Function<Object, T> mapper) {
+    return getListFiltered(splitPath(key), mapper);
+  }
+
+  /**
+   * Get a List from a data-structure and use a mapper for their content.<br>
+   * Also filters the null results.
+   *
+   * @param key    Path to List in data structure.
+   * @param mapper Mapper to parse the list content.
+   */
+  @NotNull
+  default <T> List<T> getListFiltered(final String[] key, final Function<Object, T> mapper) {
+    final Object raw = get(key);
+    return raw == null ? new ArrayList<>() : ClassWrapper.getFromDef(raw, new ArrayList<>()).stream().map(mapper).filter(Objects::nonNull).toList();
   }
 
   /**
    * Get a List from a data-structure and use a mapper for simple values.<br>
-   * Also filters the null results<br>
    * This is for simple values, for complex implementations use a custom serializer instead.
    *
    * @param key    Path to List in data structure.
    * @param mapper Mapper to parse the list content.
    */
   @NotNull
-  default <T> List<T> getListFiltered(final String key, final Function<String, T> mapper) {
-    return getListFiltered(splitPath(key), mapper);
+  default <T> List<T> getStringList(final String key, final Function<String, T> mapper) {
+    return getStringList(splitPath(key), mapper);
   }
 
+  /**
+   * Get a List from a data-structure and use a mapper for simple values.<br>
+   * This is for simple values, for complex implementations use a custom serializer instead.
+   *
+   * @param key    Path to List in data structure.
+   * @param mapper Mapper to parse the list content.
+   */
   @NotNull
-  default <T> List<T> getListFiltered(final String[] key, final Function<String, T> mapper) {
-    return getOrDefault(key, new ArrayList<String>()).stream().map(mapper).filter(Objects::nonNull).collect(Collectors.toList());
+  default <T> List<T> getStringList(final String[] key, final Function<String, T> mapper) {
+    final Object raw = get(key);
+    return raw == null ? new ArrayList<>() : ClassWrapper.getFromDef(raw, new ArrayList<String>()).stream().map(mapper).toList();
+  }
+
+  /**
+   * Get a List from a data-structure and use a mapper for simple values.<br>
+   * Also filters the null results.<br>
+   * This is for simple values, for complex implementations use a custom serializer instead.
+   *
+   * @param key    Path to List in data structure.
+   * @param mapper Mapper to parse the list content.
+   */
+  @NotNull
+  default <T> List<T> getStringListFiltered(final String key, final Function<String, T> mapper) {
+    return getStringListFiltered(splitPath(key), mapper);
+  }
+
+  /**
+   * Get a List from a data-structure and use a mapper for simple values.<br>
+   * Also filters the null results.<br>
+   * This is for simple values, for complex implementations use a custom serializer instead.
+   *
+   * @param key    Path to List in data structure.
+   * @param mapper Mapper to parse the list content.
+   */
+  @NotNull
+  default <T> List<T> getStringListFiltered(final String[] key, final Function<String, T> mapper) {
+    final Object raw = get(key);
+    return raw == null ? new ArrayList<>() : ClassWrapper.getFromDef(raw, new ArrayList<String>()).stream().map(mapper).filter(Objects::nonNull).toList();
   }
 
   /**
@@ -601,6 +687,11 @@ public interface DataStorage {
 
   @NotNull
   default List<String> getStringList(final String key) {
+    return getOrDefault(key, new ArrayList<>());
+  }
+
+  @NotNull
+  default List<String> getStringList(final String[] key) {
     return getOrDefault(key, new ArrayList<>());
   }
 
@@ -649,7 +740,7 @@ public interface DataStorage {
   default <E extends Enum<E>> List<E> getEnumList(
           final String[] key,
           final Class<E> type) {
-    return getList(key, s -> Enum.valueOf(type, s));
+    return getStringList(key, (s) -> Enum.valueOf(type, s));
   }
 
   /**
@@ -659,7 +750,7 @@ public interface DataStorage {
   default <E extends Enum<E>> List<E> getEnumList(
           final String key,
           final Class<E> type) {
-    return getList(key, s -> Enum.valueOf(type, s));
+    return getStringList(key, s -> Enum.valueOf(type, s));
   }
 
   /**
@@ -670,7 +761,7 @@ public interface DataStorage {
           final String[] key,
           final Class<E> type,
           final Function<String, String> mapper) {
-    return getList(key, s -> Enum.valueOf(type, mapper.apply(s)));
+    return getStringList(key, s -> Enum.valueOf(type, mapper.apply(s)));
   }
 
   /**
@@ -681,7 +772,7 @@ public interface DataStorage {
           final String key,
           final Class<E> type,
           final Function<String, String> mapper) {
-    return getList(key, s -> Enum.valueOf(type, mapper.apply(s)));
+    return getStringList(key, s -> Enum.valueOf(type, mapper.apply(s)));
   }
 
   /**
@@ -691,7 +782,7 @@ public interface DataStorage {
   default <E extends Enum<E>> List<E> getEnumList(
           final String[] key,
           final Function<String, E> mapper) {
-    return getList(key, mapper);
+    return getStringList(key, mapper);
   }
 
   /**
@@ -701,7 +792,7 @@ public interface DataStorage {
   default <E extends Enum<E>> List<E> getEnumList(
           final String key,
           final Function<String, E> mapper) {
-    return getList(key, mapper);
+    return getStringList(key, mapper);
   }
 
   /**
@@ -712,7 +803,7 @@ public interface DataStorage {
   default <E extends Enum<E>> List<E> getEnumListFiltered(
           final String[] key,
           final Class<E> type) {
-    return getListFiltered(key, s -> Enum.valueOf(type, s));
+    return getStringListFiltered(key, s -> Enum.valueOf(type, s));
   }
 
   /**
@@ -723,7 +814,7 @@ public interface DataStorage {
   default <E extends Enum<E>> List<E> getEnumListFiltered(
           final String key,
           final Class<E> type) {
-    return getListFiltered(key, s -> Enum.valueOf(type, s));
+    return getStringListFiltered(key, s -> Enum.valueOf(type, s));
   }
 
   /**
@@ -735,7 +826,7 @@ public interface DataStorage {
           final String[] key,
           final Class<E> type,
           final Function<String, String> mapper) {
-    return getListFiltered(key, s -> Enum.valueOf(type, mapper.apply(s)));
+    return getStringListFiltered(key, s -> Enum.valueOf(type, mapper.apply(s)));
   }
 
   /**
@@ -747,7 +838,7 @@ public interface DataStorage {
           final String key,
           final Class<E> type,
           final Function<String, String> mapper) {
-    return getListFiltered(key, s -> Enum.valueOf(type, mapper.apply(s)));
+    return getStringListFiltered(key, s -> Enum.valueOf(type, mapper.apply(s)));
   }
 
   /**
@@ -758,7 +849,7 @@ public interface DataStorage {
   default <E extends Enum<E>> List<E> getEnumListFiltered(
           final String[] key,
           final Function<String, E> mapper) {
-    return getListFiltered(key, mapper);
+    return getStringListFiltered(key, mapper);
   }
 
 
@@ -770,7 +861,7 @@ public interface DataStorage {
   default <E extends Enum<E>> List<E> getEnumListFiltered(
           final String key,
           final Function<String, E> mapper) {
-    return getListFiltered(key, mapper);
+    return getStringListFiltered(key, mapper);
   }
 
   /**

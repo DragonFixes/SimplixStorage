@@ -454,6 +454,12 @@ public class FileData {
     this.localMap.putAll(map);
   }
 
+  public void putAllRaw(final Map<String[], Object> map) {
+    for (Map.Entry<String[], Object> entry : map.entrySet()) {
+      insert(entry.getKey(), entry.getValue());
+    }
+  }
+
   private int size(final Map<String, Object> map) {
     int size = map.size();
     for (final Map.Entry<String, Object> entry : map.entrySet()) {
