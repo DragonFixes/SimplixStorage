@@ -41,6 +41,14 @@ public class SimplixSerializer {
     return null;
   }
 
+  private static ClassCastException handleException(Exception e) {
+    if (e instanceof ClassCastException) {
+      return (ClassCastException) e;
+    } else {
+      return new ClassCastException(e.getClass().getCanonicalName() + ": " + e.getMessage());
+    }
+  }
+
   /**
    * Serializes into an object to save
    */
@@ -50,7 +58,11 @@ public class SimplixSerializer {
     Valid.notNull(
         serializable,
         "No serializable found for '" + obj.getClass().getSimpleName() + "'");
-    return serializable.serialize(obj);
+    try {
+      return serializable.serialize(obj);
+    } catch (Exception e) {
+      throw handleException(e);
+    }
   }
 
   /**
@@ -63,7 +75,11 @@ public class SimplixSerializer {
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'",
             "Raw: '" + obj.getClass().getSimpleName() + "'");
-    return serializable.serialize(obj);
+    try {
+      return serializable.serialize(obj);
+    } catch (Exception e) {
+      throw handleException(e);
+    }
   }
 
   /**
@@ -75,7 +91,11 @@ public class SimplixSerializer {
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'",
             "Raw: '" + raw.getClass().getSimpleName() + "'");
-    return serializable.deserialize(raw, data);
+    try {
+      return serializable.deserialize(raw, data);
+    } catch (Exception e) {
+      throw handleException(e);
+    }
   }
 
   /**
@@ -93,7 +113,11 @@ public class SimplixSerializer {
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
-    return raw.stream().map(o -> serializable.serialize(o)).toList();
+    try {
+      return raw.stream().map(o -> serializable.serialize(o)).toList();
+    } catch (Exception e) {
+      throw handleException(e);
+    }
   }
 
   /**
@@ -123,7 +147,11 @@ public class SimplixSerializer {
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
-    return raw.stream().map(o -> serializable.deserialize(o, data)).toList();
+    try {
+      return raw.stream().map(o -> serializable.deserialize(o, data)).toList();
+    } catch (Exception e) {
+      throw handleException(e);
+    }
   }
 
   /**
@@ -168,8 +196,12 @@ public class SimplixSerializer {
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
     final Map<String, Object> newMap = new HashMap<>();
-    for (Map.Entry<String, T> e : map.entrySet()) {
-      newMap.put(e.getKey(), serializable.serialize(e.getValue()));
+    try {
+      for (Map.Entry<String, T> e : map.entrySet()) {
+        newMap.put(e.getKey(), serializable.serialize(e.getValue()));
+      }
+    } catch (Exception e) {
+      throw handleException(e);
     }
     return newMap;
   }
@@ -202,8 +234,12 @@ public class SimplixSerializer {
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
     final Map<String, T> map = new HashMap<>();
-    for (Map.Entry<?, ?> e : raw.entrySet()) {
-      map.put((String) e.getKey(), serializable.deserialize(e.getValue(), data));
+    try {
+      for (Map.Entry<?, ?> e : raw.entrySet()) {
+        map.put((String) e.getKey(), serializable.deserialize(e.getValue(), data));
+      }
+    } catch (Exception e) {
+      throw handleException(e);
     }
     return map;
   }
