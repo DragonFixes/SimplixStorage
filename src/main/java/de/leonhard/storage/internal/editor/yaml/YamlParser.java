@@ -37,7 +37,7 @@ public final class YamlParser {
 
   private List<String> getKeyAndRemove(String key, final Map<String, List<String>> data) {
     key = key.split(":")[0];
-    for (final val entry : data.entrySet()) {
+    for (val entry : data.entrySet()) {
       final String entryKey = entry.getKey().split(":")[0];
 
       // using substring since indentation might differ a bit

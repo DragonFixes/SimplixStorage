@@ -84,30 +84,14 @@ public final class TomlWriter {
 
   private static void addEscaped(final StringBuilder stringBuilder, final char c) {
     switch (c) {
-      case '\b':
-        stringBuilder.append("\\b");
-        break;
-      case '\t':
-        stringBuilder.append("\\t");
-        break;
-      case '\n':
-        stringBuilder.append("\\n");
-        break;
-      case '\\':
-        stringBuilder.append("\\\\");
-        break;
-      case '\r':
-        stringBuilder.append("\\r");
-        break;
-      case '\f':
-        stringBuilder.append("\\f");
-        break;
-      case '"':
-        stringBuilder.append("\\\"");
-        break;
-      default:
-        stringBuilder.append(c);
-        break;
+      case '\b' -> stringBuilder.append("\\b");
+      case '\t' -> stringBuilder.append("\\t");
+      case '\n' -> stringBuilder.append("\\n");
+      case '\\' -> stringBuilder.append("\\\\");
+      case '\r' -> stringBuilder.append("\\r");
+      case '\f' -> stringBuilder.append("\\f");
+      case '"' -> stringBuilder.append("\\\"");
+      default -> stringBuilder.append(c);
     }
   }
 
@@ -167,8 +151,7 @@ public final class TomlWriter {
     for (final Map.Entry<String, Object> entry : table.entrySet()) {
       final String name = entry.getKey();
       final Object value = entry.getValue();
-      if (value instanceof Collection) { // array
-        final Collection c = (Collection) value;
+      if (value instanceof Collection c) { // array
         if (!c.isEmpty() && c.iterator().next() instanceof Map) { // array of tables
           if (simpleValues) {
             continue;
@@ -194,8 +177,7 @@ public final class TomlWriter {
           write(" = ");
           writeArray(c);
         }
-      } else if (value instanceof Object[]) { // array
-        final Object[] array = (Object[]) value;
+      } else if (value instanceof Object[] array) { // array
         if (array.length > 0 && array[0] instanceof Map) { // array of tables
           if (simpleValues) {
             continue;
@@ -388,8 +370,7 @@ public final class TomlWriter {
       writeArray((float[]) value);
     } else if (value instanceof double[]) {
       writeArray((double[]) value);
-    } else if (value
-        instanceof Map) { // should not happen because an array of tables is detected by
+    } else if (value instanceof Map) { // should not happen because an array of tables is detected by
       // writeTableContent()
       throw new IOException("Unexpected value " + value);
     } else {

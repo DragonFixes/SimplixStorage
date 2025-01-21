@@ -23,12 +23,14 @@ public class FileData {
   private final Map<String, Object> localMap;
   @Getter
   private final String rawPath;
-  @Getter
-  private final String pathPattern;
+
+  public FileData(final DataType dataType, final String pathPattern) {
+    this.rawPath = pathPattern;
+    this.localMap = dataType.getMapImplementation();
+  }
 
   public FileData(final Map<String, Object> map, final DataType dataType, final String pathPattern) {
     this.rawPath = pathPattern;
-    this.pathPattern = Pattern.quote(this.rawPath);
     this.localMap = dataType.getMapImplementation();
 
     this.localMap.putAll(map);
@@ -40,7 +42,6 @@ public class FileData {
 
   public FileData(final JSONObject jsonObject, final String pathPattern) {
     this.rawPath = pathPattern;
-    this.pathPattern = Pattern.quote(this.rawPath);
     this.localMap = new HashMap<>(jsonObject.toMap());
   }
 
@@ -50,13 +51,19 @@ public class FileData {
 
   public FileData(final JSONObject jsonObject, final DataType dataType, final String pathPattern) {
     this.rawPath = pathPattern;
-    this.pathPattern = Pattern.quote(this.rawPath);
     this.localMap = dataType.getMapImplementation();
     this.localMap.putAll(jsonObject.toMap());
   }
 
   public FileData(final JSONObject jsonObject, final DataType dataType) {
     this(jsonObject, dataType, ".");
+  }
+
+  /**
+   * @return A string array split by the separator of this file.
+   */
+  public String[] splitPath(String path) {
+    return path.split(Pattern.quote(rawPath));
   }
 
   public void clear() {
@@ -83,7 +90,7 @@ public class FileData {
    * @return the value assigned to the given key or null if the key does not exist.
    */
   public Object get(final String key) {
-    final String[] parts = key.split(this.pathPattern);
+    final String[] parts = splitPath(key);
     return get(this.localMap, parts, 0);
   }
 
@@ -131,7 +138,7 @@ public class FileData {
    * @param value the value to be assigned to the key.
    */
   public synchronized void insert(final String key, final Object value) {
-    insert(key.split(this.pathPattern), value);
+    insert(splitPath(key), value);
   }
 
   /**
@@ -151,7 +158,7 @@ public class FileData {
    * @param value the value to be assigned to the key.
    */
   public synchronized <T> void insertSerializable(final String key, final T value, final Class<T> type) {
-    insertSerializable(key.split(this.pathPattern), value, type);
+    insertSerializable(splitPath(key), value, type);
   }
 
   /**
@@ -171,7 +178,7 @@ public class FileData {
    * @param value the value to be assigned to the key.
    */
   public synchronized <T> void insertSerializableList(final String key, final List<T> value, final Class<T> type) {
-    insertSerializableList(key.split(this.pathPattern), value, type);
+    insertSerializableList(splitPath(key), value, type);
   }
 
   /**
@@ -191,7 +198,7 @@ public class FileData {
    * @param value the value to be assigned to the key.
    */
   public synchronized <T> void insertSerializableMap(final String key, final Map<String, T> value, final Class<T> type) {
-    insertSerializableMap(key.split(this.pathPattern), value, type);
+    insertSerializableMap(splitPath(key), value, type);
   }
 
   private Object insert(
@@ -217,7 +224,7 @@ public class FileData {
    * @return true if the key exists, otherwise false.
    */
   public boolean containsKey(final String key) {
-    final String[] parts = key.split(this.pathPattern);
+    final String[] parts = splitPath(key);
     return containsKey(this.localMap, parts, 0);
   }
 
@@ -253,7 +260,7 @@ public class FileData {
    */
   public synchronized void remove(final String key) {
     if (containsKey(key)) {
-      final String[] parts = key.split(this.pathPattern);
+      final String[] parts = splitPath(key);
       removePr(parts);
     }
   }
@@ -441,13 +448,31 @@ public class FileData {
   }
 
   /**
-   * get the size of all sublayers of the given key combined.
+   * Get the size of all sublayers of the given key combined.
    *
-   * @param key the key of the layer
+   * @param key the key of the layers
    * @return the size of all sublayers of the given key or 0 if the key does not exist.
    */
   public int size(final String key) {
-    return this.localMap.size();
+    Object o = get(key);
+    if (o instanceof Map map) {
+      return size(map);
+    }
+    return 0;
+  }
+
+  /**
+   * Get the size of all sublayers of the given key combined.
+   *
+   * @param key the key of the layers
+   * @return the size of all sublayers of the given key or 0 if the key does not exist.
+   */
+  public int size(final String[] key) {
+    Object o = get(key);
+    if (o instanceof Map map) {
+      return size(map);
+    }
+    return 0;
   }
 
   public void putAll(final Map<String, Object> map) {

@@ -88,7 +88,7 @@ public class Yaml extends FlatFile {
           @Nullable final DataType dataType,
           @Nullable final String pathPattern,
           @Nullable final Consumer<FlatFile> reloadConsumer) {
-    this(name, path, inputStream, reloadSettings, null, configSettings, dataType, null, reloadConsumer);
+    this(name, path, inputStream, reloadSettings, null, configSettings, dataType, pathPattern, reloadConsumer);
   }
 
   public Yaml(final String name,
