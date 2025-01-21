@@ -144,11 +144,16 @@ public class Yaml extends FlatFile {
   }
 
   public Yaml addDefaultsFromInputStream(@Nullable final InputStream inputStream) {
+    return addDefaultsFromInputStream(inputStream, false);
+  }
+
+  public Yaml addDefaultsFromInputStream(@Nullable final InputStream inputStream, boolean force) {
     reloadIfNeeded();
     // Creating & setting defaults
     if (inputStream == null) {
       return this;
     }
+    if (!force && this.configSettings == ConfigSettings.FIRST_TIME && exists) return this;
     if (shouldSetEmpty()) {
       LoggerInfo.getLogger().sendWarning("Tried to write values but is lock by an error!");
       return this;
@@ -186,19 +191,14 @@ public class Yaml extends FlatFile {
 
   @Override
   protected void write(final FileData data) throws IOException {
-
-    if (ConfigSettings.PRESERVE_COMMENTS == this.configSettings ||
-            (ConfigSettings.FIRST_TIME == this.configSettings && !exists)) {
-      exists = true;
+    if (this.configSettings.isSorted()) {
       val unEdited = this.yamlEditor.read();
       write0(this.fileData);
       this.yamlEditor.write(this.parser.parseLines(unEdited, this.yamlEditor.readKeys()));
-      return;
+    } else if (this.configSettings.isUnsorted()) {
+      // If Comments shouldn't be preserved.
+      write0(this.fileData);
     }
-
-    // If Comments shouldn't be preserved.
-    write0(this.fileData);
-
   }
 
   // Writing without comments

@@ -12,5 +12,13 @@ public enum ConfigSettings {
   /**
    * Skips the comments from the file.
    */
-  SKIP_COMMENTS
+  SKIP_COMMENTS;
+
+  public boolean isSorted() {
+    return this == PRESERVE_COMMENTS || this == FIRST_TIME;
+  }
+
+  public boolean isUnsorted() {
+    return this == SKIP_COMMENTS;
+  }
 }
