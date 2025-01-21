@@ -148,11 +148,11 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   }
 
   protected boolean shouldGetEmpty() {
-    return errorLock && errorHandler == ErrorHandler.EMPTY;
+    return errorLock && (errorHandler == ErrorHandler.EMPTY || (errorHandler == ErrorHandler.KEEP_OR_EMPTY && fileData == null));
   }
 
   protected boolean shouldSetEmpty() {
-    return errorLock && (errorHandler == ErrorHandler.EMPTY || errorHandler == ErrorHandler.KEEP);
+    return errorLock && (errorHandler == ErrorHandler.EMPTY || errorHandler == ErrorHandler.KEEP_OR_EMPTY);
   }
 
   // ----------------------------------------------------------------------------------------------------
@@ -463,6 +463,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   }
 
   public final void forceReload() {
+    boolean shouldThrow = false;
     Map<String, Object> out = new HashMap<>();
     try {
       out = readToMap();
@@ -471,32 +472,54 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
       handleReloadException(ex);
       errorLock = true;
     } finally {
-      boolean shouldWrite = true;
+      final boolean ex = errorLock;
+      boolean shouldModify = true;
+
       if (errorLock) {
         switch (errorHandler) {
-          case ROLLBACK -> {
-            if (fileData != null)
-              out = this.fileData.toMap(); // returns old config
+          case KEEP_OR_EMPTY, EMPTY -> shouldModify = false; // disallows modify file data
+          case KEEP_OR_CLEAR -> {
+            if (fileData == null) {
+              errorLock = false; // restores to clear
+            } else {
+              shouldModify = false; // disallows modify file data
+            }
           }
-          case KEEP, EMPTY -> shouldWrite = false; // disallows the file write
-          // CLEAR ->  default behavior (always clears)
+          case KEEP_OR_THROW -> {
+            shouldModify = false; // disallows modifications
+            if (fileData == null) shouldThrow = true; // throws if no data exists
+          }
+          case ROLLBACK -> {
+            if (fileData == null) {
+              shouldThrow = true; // throws if no data exists
+            } else {
+              out = this.fileData.toMap(); // returns old config
+              errorLock = false;
+            }
+          }
+          case CLEAR -> errorLock = false; // restores to clear
         }
       }
 
-      if (shouldWrite) {
+      if (shouldModify) {
         if (this.fileData == null) {
           this.fileData = new FileData(out, this.dataType, pathSeparator());
         } else {
           this.fileData.loadData(out);
         }
       }
+
       this.lastLoaded = System.currentTimeMillis();
-      if (errorLock && this.errorConsumer != null) {
+      if (ex && this.errorConsumer != null) {
         this.errorConsumer.accept(this);
       }
-      if (shouldWrite && this.reloadConsumer != null) {
+      if (shouldModify && this.reloadConsumer != null) {
         this.reloadConsumer.accept(this);
       }
+    }
+    if (shouldThrow) {
+      throw new IllegalStateException("Exception caused because of the error handler requirements: "
+              + this.errorHandler.name() + " (" + this.errorHandler.getReason() + ")");
     }
   }
 
