@@ -33,6 +33,8 @@ public class SimplixProviders {
   public YamlConfig yamlConfig() {
     if (yamlConfig == null) {
       final YamlConfig config = new YamlConfig();
+      // Use standard indent size
+      config.writeConfig.setIndentSize(2);
       // Use unicode
       config.writeConfig.setEscapeUnicode(false);
       // Don't use anchors
