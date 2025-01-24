@@ -131,7 +131,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
 
 
   public void setPathPrefix(String pathPrefix) {
-    setPathPrefix(pathPrefix.split(pathSeparator()));
+    setPathPrefix(splitPath(pathPrefix));
   }
 
   @SuppressWarnings("LombokSetterMayBeUsed")
@@ -566,7 +566,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   }
 
   public final FlatFileSection getSection(final String pathPrefix) {
-    return getSection(pathPrefix.split(pathSeparator()));
+    return getSection(splitPath(pathPrefix));
   }
 
   @Override
