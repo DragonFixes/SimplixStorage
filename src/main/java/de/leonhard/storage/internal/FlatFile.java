@@ -1,7 +1,6 @@
 package de.leonhard.storage.internal;
 
 import de.leonhard.storage.internal.settings.ErrorHandler;
-import de.leonhard.storage.logger.LoggerInfo;
 import de.leonhard.storage.annotation.ConfigPath;
 import de.leonhard.storage.internal.provider.SimplixProviders;
 import de.leonhard.storage.internal.settings.DataType;
@@ -200,9 +199,9 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     final String fileName = this.fileType == null
         ? "File"
         : this.fileType.name().toLowerCase(); // fileType might be null
-    LoggerInfo.getLogger().sendError("Exception reloading " + fileName + " '" + getName() + "'");
-    LoggerInfo.getLogger().sendError("In '" + FileUtils.getParentDirPath(this.file) + "'");
-    LoggerInfo.getLogger().printStackTrace(ioException);
+    SimplixProviders.logger().sendError("Exception reloading " + fileName + " '" + getName() + "'");
+    SimplixProviders.logger().sendError("In '" + FileUtils.getParentDirPath(this.file) + "'");
+    SimplixProviders.logger().printStackTrace(ioException);
   }
   // ----------------------------------------------------------------------------------------------------
   // Overridden methods from DataStorage
@@ -212,7 +211,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   public synchronized void set(final String[] key, final Object value) {
     reloadIfNeeded();
     if (shouldSetEmpty()) {
-      LoggerInfo.getLogger().sendWarning("Tried to set value to path '" + createPath(key) + "' but is lock by an error!");
+      SimplixProviders.logger().sendWarning("Tried to set value to path '" + createPath(key) + "' but is lock by an error!");
       return;
     }
     final String[] finalKey = (this.pathPrefix == null) ? key : concatenatePath(this.pathPrefix, key);
@@ -301,7 +300,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   public final synchronized void remove(final String[] key) {
     reloadIfNeeded();
     if (shouldSetEmpty()) {
-      LoggerInfo.getLogger().sendWarning("Tried to remove value from path '" + createPath(key) + "' but is lock by an error!");
+      SimplixProviders.logger().sendWarning("Tried to remove value from path '" + createPath(key) + "' but is lock by an error!");
       return;
     }
     this.fileData.remove(key);
@@ -319,7 +318,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
    */
   public final void putAll(final Map<String, Object> map) {
     if (shouldSetEmpty()) {
-      LoggerInfo.getLogger().sendWarning("Tried to set values but is lock by an error!");
+      SimplixProviders.logger().sendWarning("Tried to set values but is lock by an error!");
       return;
     }
     this.fileData.putAll(map);
@@ -327,7 +326,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   }
   public final void putAllRaw(final Map<String[], Object> map) {
     if (shouldSetEmpty()) {
-      LoggerInfo.getLogger().sendWarning("Tried to set values but is lock by an error!");
+      SimplixProviders.logger().sendWarning("Tried to set values but is lock by an error!");
       return;
     }
     this.fileData.putAllRaw(map);
@@ -375,7 +374,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
 
   public void removeAll(final String... keys) {
     if (shouldSetEmpty()) {
-      LoggerInfo.getLogger().sendWarning("Tried to remove values but is lock by an error!");
+      SimplixProviders.logger().sendWarning("Tried to remove values but is lock by an error!");
       return;
     }
     for (final String key : keys) {
@@ -386,7 +385,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
 
   public void removeAllRaw(final String[]... keys) {
     if (shouldSetEmpty()) {
-      LoggerInfo.getLogger().sendWarning("Tried to remove values but is lock by an error!");
+      SimplixProviders.logger().sendWarning("Tried to remove values but is lock by an error!");
       return;
     }
     for (final String[] key : keys) {
@@ -406,7 +405,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   public final void addDefaultsFromFileData(@NonNull final FileData newData) {
     reloadIfNeeded();
     if (shouldSetEmpty()) {
-      LoggerInfo.getLogger().sendWarning("Tried to set values but is lock by an error!");
+      SimplixProviders.logger().sendWarning("Tried to set values but is lock by an error!");
       return;
     }
 
@@ -436,7 +435,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
       final CharSequence target,
       final CharSequence replacement) throws IOException {
     if (shouldSetEmpty()) {
-      LoggerInfo.getLogger().sendWarning("Tried to replace values but is lock by an error!");
+      SimplixProviders.logger().sendWarning("Tried to replace values but is lock by an error!");
       return;
     }
     final List<String> lines = Files.readAllLines(this.file.toPath());
@@ -451,9 +450,9 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
     try {
       write(this.fileData);
     } catch (final IOException ex) {
-      LoggerInfo.getLogger().sendError("Exception writing to file '" + getName() + "'");
-      LoggerInfo.getLogger().sendError("In '" + FileUtils.getParentDirPath(this.file) + "'");
-      LoggerInfo.getLogger().printStackTrace(ex);
+      SimplixProviders.logger().sendError("Exception writing to file '" + getName() + "'");
+      SimplixProviders.logger().sendError("In '" + FileUtils.getParentDirPath(this.file) + "'");
+      SimplixProviders.logger().printStackTrace(ex);
     }
     this.lastLoaded = System.currentTimeMillis();
   }

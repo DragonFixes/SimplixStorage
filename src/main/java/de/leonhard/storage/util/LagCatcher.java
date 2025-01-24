@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import de.leonhard.storage.logger.LoggerInfo;
+import de.leonhard.storage.internal.provider.SimplixProviders;
 import lombok.experimental.UtilityClass;
 import lombok.val;
 
@@ -43,7 +43,7 @@ public class LagCatcher {
     val value2 = LagCatcher.stopTimes.get(name);
     if (value2 != null) {
       val took = value2 - value;
-      LoggerInfo.getLogger().printMessage(
+      SimplixProviders.logger().printMessage(
           (Object)
               (
                   "Test '"
@@ -70,7 +70,7 @@ public class LagCatcher {
       runnable.run();
       nanosTook += System.nanoTime() - nanoTime;
     }
-    LoggerInfo.getLogger().printMessage(
+    SimplixProviders.logger().printMessage(
         (Object)
             (
                 "Average time: "
@@ -78,7 +78,7 @@ public class LagCatcher {
                 + " micros - "
                 + TimeUnit.NANOSECONDS.toMillis(nanosTook / cycles)
                 + " ms."));
-    LoggerInfo.getLogger().printMessage(
+    SimplixProviders.logger().printMessage(
         (Object)
             (
                 "Test took: "

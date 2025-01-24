@@ -7,11 +7,11 @@ import de.leonhard.storage.internal.editor.yaml.SimpleYamlReader;
 import de.leonhard.storage.internal.editor.yaml.SimpleYamlWriter;
 import de.leonhard.storage.internal.editor.yaml.YamlEditor;
 import de.leonhard.storage.internal.editor.yaml.YamlParser;
+import de.leonhard.storage.internal.provider.SimplixProviders;
 import de.leonhard.storage.internal.settings.ConfigSettings;
 import de.leonhard.storage.internal.settings.DataType;
 import de.leonhard.storage.internal.settings.ErrorHandler;
 import de.leonhard.storage.internal.settings.ReloadSettings;
-import de.leonhard.storage.logger.LoggerInfo;
 import de.leonhard.storage.util.FileUtils;
 
 import java.io.File;
@@ -155,7 +155,7 @@ public class Yaml extends FlatFile {
     }
     if (!force && this.configSettings == ConfigSettings.FIRST_TIME && exists) return this;
     if (shouldSetEmpty()) {
-      LoggerInfo.getLogger().sendWarning("Tried to write values but is lock by an error!");
+      SimplixProviders.logger().sendWarning("Tried to write values but is lock by an error!");
       return this;
     }
 
@@ -173,7 +173,7 @@ public class Yaml extends FlatFile {
 
       write();
     } catch (final Exception ex) {
-      LoggerInfo.getLogger().printStackTrace(ex);
+      SimplixProviders.logger().printStackTrace(ex);
     }
 
     return this;

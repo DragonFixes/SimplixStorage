@@ -1,6 +1,5 @@
 package de.leonhard.storage.util;
 
-import de.leonhard.storage.logger.LoggerInfo;
 import de.leonhard.storage.internal.provider.SimplixProviders;
 import lombok.*;
 import lombok.experimental.UtilityClass;
@@ -273,7 +272,7 @@ public class FileUtils {
                           Files.copy(path, zipOutputStream);
                           zipOutputStream.closeEntry();
                         } catch (final IOException ex) {
-                          LoggerInfo.getLogger().printStackTrace(ex);
+                          SimplixProviders.logger().printStackTrace(ex);
                         }
                       });
     }

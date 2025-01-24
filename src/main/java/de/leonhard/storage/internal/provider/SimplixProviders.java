@@ -1,6 +1,9 @@
 package de.leonhard.storage.internal.provider;
 
 import com.esotericsoftware.yamlbeans.YamlConfig;
+import de.leonhard.storage.logger.LoggerModel;
+import de.leonhard.storage.logger.PrinterLogger;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.experimental.UtilityClass;
@@ -22,6 +25,9 @@ public class SimplixProviders {
   private InputStreamProvider inputStreamProvider;
   @Setter
   private ExceptionHandler exceptionHandler;
+  @Setter
+  @Getter
+  private LoggerModel logger = new PrinterLogger();
 
   public MapProvider mapProvider() {
     if (mapProvider == null) {

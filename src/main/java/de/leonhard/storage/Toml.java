@@ -4,9 +4,9 @@ import de.leonhard.storage.internal.FileData;
 import de.leonhard.storage.internal.FileType;
 import de.leonhard.storage.internal.FlatFile;
 import de.leonhard.storage.internal.editor.toml.TomlManager;
+import de.leonhard.storage.internal.provider.SimplixProviders;
 import de.leonhard.storage.internal.settings.ErrorHandler;
 import de.leonhard.storage.internal.settings.ReloadSettings;
-import de.leonhard.storage.logger.LoggerInfo;
 import de.leonhard.storage.util.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -99,9 +99,9 @@ public class Toml extends FlatFile {
     try {
       TomlManager.write(data.toMap(), getFile());
     } catch (final IOException ioException) {
-      LoggerInfo.getLogger().printMessage("Exception while writing fileData to file '" + getName() + "'");
-      LoggerInfo.getLogger().printMessage("In '" + FileUtils.getParentDirPath(this.file) + "'");
-      LoggerInfo.getLogger().printStackTrace(ioException);
+      SimplixProviders.logger().printMessage("Exception while writing fileData to file '" + getName() + "'");
+      SimplixProviders.logger().printMessage("In '" + FileUtils.getParentDirPath(this.file) + "'");
+      SimplixProviders.logger().printStackTrace(ioException);
     }
   }
 }
