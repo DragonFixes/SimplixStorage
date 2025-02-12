@@ -2,7 +2,7 @@
 # SimplixStorage
 SimplixStorage - A Library to store data in a better way.
 
-[![](https://jitpack.io/v/nobeld/simplixstorage.svg)](https://jitpack.io/#nobeld/simplixstorage) [![ProjectDiscord](https://img.shields.io/discord/1183966936116240454?label=ProjectDiscord)](https://sandbox.nobeld.me/) ![GitHub](https://img.shields.io/github/license/NobelD/SimplixStorage)<br>
+[![](https://jitpack.io/v/nobeld/simplixstorage.svg)](https://jitpack.io/#nobeld/simplixstorage) [![ProjectDiscord](https://img.shields.io/discord/1183966936116240454?label=ProjectDiscord)](https://discord.com/invite/CMbuPp7hpf) ![GitHub](https://img.shields.io/github/license/NobelD/SimplixStorage)<br>
 [![SimplixDiscord](https://img.shields.io/discord/752533664696369204?label=SimplixDiscord&color=yellow)](https://discord.simplixsoft.com/)
 
 ## About this fork
