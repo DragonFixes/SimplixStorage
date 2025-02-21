@@ -202,18 +202,26 @@ public class FileUtils {
   }
 
   public boolean writeToFile(
+          @NonNull final File file,
+          @NonNull final InputStream inputStream) {
+    return writeToFile(file, inputStream, false);
+  }
+
+  public boolean writeToFile(
       @NonNull final File file,
-      @NonNull final InputStream inputStream) {
+      @NonNull final InputStream inputStream, boolean avoidExists) {
     boolean exists = false;
     try (val outputStream = new FileOutputStream(file)) {
       if (!file.exists()) {
         Files.copy(inputStream, file.toPath());
       } else {
         exists = true;
-        val data = new byte[8192];
-        int count;
-        while ((count = inputStream.read(data, 0, 8192)) != -1) {
-          outputStream.write(data, 0, count);
+        if (!avoidExists) {
+          val data = new byte[8192];
+          int count;
+          while ((count = inputStream.read(data, 0, 8192)) != -1) {
+            outputStream.write(data, 0, count);
+          }
         }
       }
     } catch (final IOException ex) {

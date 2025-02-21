@@ -103,8 +103,12 @@ public class Yaml extends FlatFile {
     super(name, path, FileType.YAML, pathPattern, reloadConsumer);
     this.inputStream = inputStream;
 
+    if (configSettings != null) {
+      this.configSettings = configSettings;
+    }
+
     if (create() && inputStream != null) {
-      exists = FileUtils.writeToFile(this.file, inputStream);
+      exists = FileUtils.writeToFile(this.file, inputStream, this.configSettings == ConfigSettings.FIRST_TIME);
     }
 
     this.yamlEditor = new YamlEditor(this.file);
@@ -116,10 +120,6 @@ public class Yaml extends FlatFile {
 
     if (errorHandler != null) {
       this.errorHandler = errorHandler;
-    }
-
-    if (configSettings != null) {
-      this.configSettings = configSettings;
     }
 
     if (dataType != null) {
@@ -140,7 +140,11 @@ public class Yaml extends FlatFile {
   // ----------------------------------------------------------------------------------------------------
 
   public Yaml addDefaultsFromInputStream() {
-    return addDefaultsFromInputStream(getInputStream().orElse(null));
+    return addDefaultsFromInputStream(false);
+  }
+
+  public Yaml addDefaultsFromInputStream(boolean force) {
+    return addDefaultsFromInputStream(getInputStream().orElse(null), force);
   }
 
   public Yaml addDefaultsFromInputStream(@Nullable final InputStream inputStream) {
