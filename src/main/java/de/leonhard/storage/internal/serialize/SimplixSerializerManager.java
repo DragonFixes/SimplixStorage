@@ -299,7 +299,7 @@ public class SimplixSerializerManager {
 
   public static Object parseObject(Object o) {
     if (o instanceof SimplixSerializableLike s) {
-      return s.deserialized();
+      return s.serialized();
     } else if (o instanceof Iterable i) {
       List<Object> list = new ArrayList<>();
       for (Object s : i) {

@@ -2,9 +2,9 @@ package de.leonhard.storage.internal.serialize;
 
 public interface SimplixSerializableLike {
 
-  Object deserialized() throws ClassCastException;
+  Object serialized() throws ClassCastException;
 
-  default Object deserializedParsed() throws ClassCastException {
-    return SimplixSerializerManager.parseObject(deserialized());
+  default Object serializedParsed() throws ClassCastException {
+    return SimplixSerializerManager.parseObject(serialized());
   }
 }

@@ -62,7 +62,7 @@ public interface DataStorage {
     if (parse) {
       setRaw(key, SimplixSerializerManager.parseObject(value));
     } else if (value instanceof SimplixSerializableLike s) {
-      setRaw(key, s.deserialized());
+      setRaw(key, s.serialized());
     } else {
       setRaw(key, value);
     }
