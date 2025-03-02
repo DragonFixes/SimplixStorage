@@ -39,12 +39,42 @@ public interface DataStorage {
   String pathSeparator();
 
   /**
+   * Set an object to your data-structure, if the object is instance of a {@link SimplixSerializableLike} then
+   * it will be deserialized as their method calls.
+   *
+   * @param key   The key your value should be associated with
+   * @param value The value you want to set in your data-structure.
+   */
+  default void set(final String[] key, final Object value) {
+    set(key, value, false);
+  }
+
+  /**
+   * Set an object to your data-structure, if parse is set true, the object will be auto deserialized, and their
+   * children if applicable, otherwise if the object is instance of a {@link SimplixSerializableLike} then
+   * it will be deserialized as their method calls.
+   *
+   * @param key   The key your value should be associated with
+   * @param value The value you want to set in your data-structure.
+   * @param parse If the value should be deserialized or their children. (if applicable)
+   */
+  default void set(final String[] key, final Object value, boolean parse) {
+    if (parse) {
+      setRaw(key, SimplixSerializerManager.parseObject(value));
+    } else if (value instanceof SimplixSerializableLike s) {
+      setRaw(key, s.deserialized());
+    } else {
+      setRaw(key, value);
+    }
+  }
+
+  /**
    * Set an object to your data-structure
    *
    * @param key   The key your value should be associated with
    * @param value The value you want to set in your data-structure.
    */
-  void set(final String[] key, final Object value);
+  void setRaw(final String[] key, final Object value);
 
   Set<String> singleLayerKeySet();
 

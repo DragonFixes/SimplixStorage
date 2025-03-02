@@ -52,8 +52,8 @@ public class FlatFileSection implements DataStorage {
   }
 
   @Override
-  public void set(final String[] key, final Object value) {
-    flatFile.set(createFinalKey(key), value);
+  public void setRaw(final String[] key, final Object value) {
+    flatFile.setRaw(createFinalKey(key), value);
   }
 
   @Override

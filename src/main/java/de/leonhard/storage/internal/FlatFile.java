@@ -208,7 +208,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   // ---------------------------------------------------------------------------------------------------->
 
   @Override
-  public synchronized void set(final String[] key, final Object value) {
+  public synchronized void setRaw(final String[] key, final Object value) {
     reloadIfNeeded();
     if (shouldSetEmpty()) {
       SimplixProviders.logger().sendWarning("Tried to set value to path '" + createPath(key) + "' but is lock by an error!");

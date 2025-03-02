@@ -280,4 +280,42 @@ public class SimplixSerializerManager {
   public <T> Map<String, T> deserializeMapFiltered(final Map<?, ?> raw, Class<T> type) {
     return deserializeMapFiltered(raw, null, type);
   }
+
+  public static Map<String, ?> parseChildren(Map<String, ?> map) {
+    Map<String, Object> sub = new HashMap<>();
+    for (Map.Entry<String, ?> entry : map.entrySet()) {
+      sub.put(entry.getKey(), parseObject(entry.getValue()));
+    }
+    return sub;
+  }
+
+  public static List<?> parseChildren(List<?> list) {
+    List<Object> sub = new ArrayList<>();
+    for (Object o : list) {
+      sub.add(parseObject(o));
+    }
+    return sub;
+  }
+
+  public static Object parseObject(Object o) {
+    if (o instanceof SimplixSerializableLike s) {
+      return s.deserialized();
+    } else if (o instanceof Iterable i) {
+      List<Object> list = new ArrayList<>();
+      for (Object s : i) {
+        list.add(parseObject(s));
+      }
+      return list;
+    } else if (o instanceof Map m) {
+      Map<String, Object> subMap = m;
+      Map<String, Object> map = new HashMap<>();
+
+      for (Map.Entry<String, Object> entry : subMap.entrySet()) {
+        map.put(entry.getKey(), parseObject(entry.getValue()));
+      }
+      return map;
+    } else {
+      return o;
+    }
+  }
 }
