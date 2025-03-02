@@ -45,7 +45,10 @@ public class SimplixSerializer {
     if (e instanceof ClassCastException) {
       return (ClassCastException) e;
     } else {
-      return new ClassCastException(e.getClass().getCanonicalName() + ": " + e.getMessage());
+      ClassCastException ex = new ClassCastException(e.getClass()
+              .getCanonicalName() + ": " + e.getMessage());
+      ex.addSuppressed(e);
+      return ex;
     }
   }
 
