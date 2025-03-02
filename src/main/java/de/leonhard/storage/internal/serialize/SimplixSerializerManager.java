@@ -13,9 +13,9 @@ import org.jetbrains.annotations.Nullable;
  */
 @UtilityClass
 @SuppressWarnings("ALL")
-public class SimplixSerializer {
+public class SimplixSerializerManager {
 
-  private final Map<Class<?>, SimplixSerializable<?>> serializables = Collections
+  private final Map<Class<?>, SimplixSerializerHolder<?>> serializables = Collections
       .synchronizedMap(new HashMap<>());
 
   public boolean isSerializable(final Class<?> clazz) {
@@ -27,7 +27,7 @@ public class SimplixSerializer {
    *
    * @param serializable Serializable to register
    */
-  public void registerSerializable(@NonNull final SimplixSerializable<?> serializable) {
+  public void registerSerializable(@NonNull final SimplixSerializerHolder<?> serializable) {
     Valid.notNull(
         serializable.getClazz(),
         "Class of serializable mustn't be null");
@@ -35,9 +35,9 @@ public class SimplixSerializer {
   }
 
   @Nullable
-  public <T> SimplixSerializable<T> findSerializable(final Class<T> clazz) {
-    SimplixSerializable<?> s = serializables.get(clazz);
-    if (s.getClazz() == clazz) return (SimplixSerializable<T>) s;
+  public <T> SimplixSerializerHolder<T> findSerializable(final Class<T> clazz) {
+    SimplixSerializerHolder<?> s = serializables.get(clazz);
+    if (s.getClazz() == clazz) return (SimplixSerializerHolder<T>) s;
     return null;
   }
 
@@ -56,7 +56,7 @@ public class SimplixSerializer {
    * Serializes into an object to save
    */
   public <T> Object serialize(final T obj) {
-    final SimplixSerializable serializable = findSerializable(obj.getClass());
+    final SimplixSerializerHolder serializable = findSerializable(obj.getClass());
 
     Valid.notNull(
         serializable,
@@ -72,7 +72,7 @@ public class SimplixSerializer {
    * Serializes into an object to save
    */
   public <T> Object serialize(final T obj, final Class<T> type) {
-    final SimplixSerializable<T> serializable = findSerializable(type);
+    final SimplixSerializerHolder<T> serializable = findSerializable(type);
 
     Valid.notNull(
             serializable,
@@ -89,7 +89,7 @@ public class SimplixSerializer {
    * Deserialize an object into the given type (if available)
    */
   public <T> T deserialize(final Object raw, final Object data, Class<T> type) {
-    final SimplixSerializable<T> serializable = findSerializable(type);
+    final SimplixSerializerHolder<T> serializable = findSerializable(type);
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'",
@@ -112,7 +112,7 @@ public class SimplixSerializer {
    * Serializes a list into objects to save
    */
   public <T> List<Object> serializeList(final List<T> raw, Class<T> type) {
-    final SimplixSerializable<T> serializable = findSerializable(type);
+    final SimplixSerializerHolder<T> serializable = findSerializable(type);
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
@@ -128,7 +128,7 @@ public class SimplixSerializer {
    * Also handles every result and filters each one.
    */
   public <T> List<Object> serializeListFiltered(final List<T> raw, Class<T> type) {
-    final SimplixSerializable<T> serializable = findSerializable(type);
+    final SimplixSerializerHolder<T> serializable = findSerializable(type);
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
@@ -146,7 +146,7 @@ public class SimplixSerializer {
    */
   public <T> List<T> deserializeList(final List<?> raw, final Object data, Class<T> type) {
 
-    final SimplixSerializable<T> serializable = findSerializable(type);
+    final SimplixSerializerHolder<T> serializable = findSerializable(type);
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
@@ -169,7 +169,7 @@ public class SimplixSerializer {
    * Also handles every result and filters each one.
    */
   public <T> List<T> deserializeListFiltered(final List<?> raw, final Object data, Class<T> type) {
-    final SimplixSerializable<T> serializable = findSerializable(type);
+    final SimplixSerializerHolder<T> serializable = findSerializable(type);
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
@@ -194,7 +194,7 @@ public class SimplixSerializer {
    * Serializes a map into objects to save.
    */
   public <T> Map<String, Object> serializeMap(final Map<String, T> map, Class<T> type) {
-    final SimplixSerializable<T> serializable = findSerializable(type);
+    final SimplixSerializerHolder<T> serializable = findSerializable(type);
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
@@ -214,7 +214,7 @@ public class SimplixSerializer {
    * Also handles every result and filters each one.
    */
   public <T> Map<String, Object> serializeMapFiltered(final Map<String, T> map, Class<T> type) {
-    final SimplixSerializable<T> serializable = findSerializable(type);
+    final SimplixSerializerHolder<T> serializable = findSerializable(type);
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
@@ -232,7 +232,7 @@ public class SimplixSerializer {
    * Deserialize a map of objects into the given type (if available)
    */
   public <T> Map<String, T> deserializeMap(final Map<?, ?> raw, final Object data, Class<T> type) {
-    final SimplixSerializable<T> serializable = findSerializable(type);
+    final SimplixSerializerHolder<T> serializable = findSerializable(type);
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
@@ -259,7 +259,7 @@ public class SimplixSerializer {
    * Also handles every result and filters each one.
    */
   public <T> Map<String, T> deserializeMapFiltered(final Map<?, ?> raw, final Object data, Class<T> type) {
-    final SimplixSerializable<T> serializable = findSerializable(type);
+    final SimplixSerializerHolder<T> serializable = findSerializable(type);
     Valid.notNull(
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");

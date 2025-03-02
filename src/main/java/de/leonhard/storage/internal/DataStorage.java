@@ -2,7 +2,8 @@ package de.leonhard.storage.internal;
 
 import de.leonhard.storage.internal.exceptions.SimplixValidationException;
 import de.leonhard.storage.internal.provider.SimplixProviders;
-import de.leonhard.storage.internal.serialize.SimplixSerializer;
+import de.leonhard.storage.internal.serialize.SimplixSerializableLike;
+import de.leonhard.storage.internal.serialize.SimplixSerializerManager;
 import de.leonhard.storage.util.ClassWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -1213,8 +1214,8 @@ public interface DataStorage {
   // ----------------------------------------------------------------------------------------------------
 
   /**
-   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
-   * your serializable in the {@link SimplixSerializer} before.
+   * Method to deserialize a class using the {@link SimplixSerializerManager}. You will need to register
+   * your serializable in the {@link SimplixSerializerManager} before.
    *
    * @param key   The key your value should be associated with.
    * @param value The value you want to set in your data-structure.
@@ -1223,7 +1224,7 @@ public interface DataStorage {
    */
   default <T> void setSerializable(@NotNull final String key, @NotNull final T value) {
     try {
-      final Object data = SimplixSerializer.serialize(value);
+      final Object data = SimplixSerializerManager.serialize(value);
       set(key, data);
     } catch (final Throwable throwable) {
       throw SimplixProviders.exceptionHandler().create(
@@ -1235,8 +1236,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
-   * your serializable in the {@link SimplixSerializer} before.<br>
+   * Method to deserialize a class using the {@link SimplixSerializerManager}. You will need to register
+   * your serializable in the {@link SimplixSerializerManager} before.<br>
    * This ensures to serialize with the given type.
    *
    * @param key   The key your value should be associated with.
@@ -1246,7 +1247,7 @@ public interface DataStorage {
    */
   default <T> void setSerializable(@NotNull final String[] key, @NotNull final T value, @NotNull final Class<T> type) {
     try {
-      final Object data = SimplixSerializer.serialize(value, type);
+      final Object data = SimplixSerializerManager.serialize(value, type);
       set(key, data);
     } catch (final Throwable throwable) {
       throw SimplixProviders.exceptionHandler().create(
@@ -1258,8 +1259,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
-   * your serializable in the {@link SimplixSerializer} before.<br>
+   * Method to deserialize a class using the {@link SimplixSerializerManager}. You will need to register
+   * your serializable in the {@link SimplixSerializerManager} before.<br>
    * This ensures to serialize with the given type.
    *
    * @param key   The key your value should be associated with.
@@ -1272,8 +1273,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
-   * your serializable in the {@link SimplixSerializer} before.
+   * Method to deserialize a class using the {@link SimplixSerializerManager}. You will need to register
+   * your serializable in the {@link SimplixSerializerManager} before.
    *
    * @param key   The key your value should be associated with.
    * @param value The value you want to set in your data-structure.
@@ -1281,7 +1282,7 @@ public interface DataStorage {
    */
   default <T> void setSerializableList(@NotNull final String[] key, @NotNull final List<T> value, @NotNull final Class<T> type) {
     try {
-      final Object data = SimplixSerializer.serializeList(value, type);
+      final Object data = SimplixSerializerManager.serializeList(value, type);
       set(key, data);
     } catch (final Throwable throwable) {
       throw SimplixProviders.exceptionHandler().create(
@@ -1293,8 +1294,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
-   * your serializable in the {@link SimplixSerializer} before.
+   * Method to deserialize a class using the {@link SimplixSerializerManager}. You will need to register
+   * your serializable in the {@link SimplixSerializerManager} before.
    *
    * @param key   The key your value should be associated with.
    * @param value The value you want to set in your data-structure.
@@ -1305,8 +1306,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
-   * your serializable in the {@link SimplixSerializer} before.
+   * Method to deserialize a class using the {@link SimplixSerializerManager}. You will need to register
+   * your serializable in the {@link SimplixSerializerManager} before.
    *
    * @param key   The key your value should be associated with.
    * @param value The value you want to set in your data-structure.
@@ -1314,7 +1315,7 @@ public interface DataStorage {
    */
   default <T> void setSerializableListFiltered(@NotNull final String[] key, @NotNull final List<T> value, @NotNull final Class<T> type) {
     try {
-      final Object data = SimplixSerializer.serializeListFiltered(value, type);
+      final Object data = SimplixSerializerManager.serializeListFiltered(value, type);
       set(key, data);
     } catch (final Throwable throwable) {
       throw SimplixProviders.exceptionHandler().create(
@@ -1326,8 +1327,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
-   * your serializable in the {@link SimplixSerializer} before.
+   * Method to deserialize a class using the {@link SimplixSerializerManager}. You will need to register
+   * your serializable in the {@link SimplixSerializerManager} before.
    *
    * @param key   The key your value should be associated with.
    * @param value The value you want to set in your data-structure.
@@ -1338,8 +1339,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
-   * your serializable in the {@link SimplixSerializer} before.
+   * Method to deserialize a class using the {@link SimplixSerializerManager}. You will need to register
+   * your serializable in the {@link SimplixSerializerManager} before.
    *
    * @param key   The key your value should be associated with.
    * @param value The value you want to set in your data-structure.
@@ -1347,7 +1348,7 @@ public interface DataStorage {
    */
   default <T> void setSerializableMap(@NotNull final String[] key, @NotNull final Map<String, T> value, @NotNull final Class<T> type) {
     try {
-      final Object data = SimplixSerializer.serializeMap(value, type);
+      final Object data = SimplixSerializerManager.serializeMap(value, type);
       set(key, data);
     } catch (final Throwable throwable) {
       throw SimplixProviders.exceptionHandler().create(
@@ -1359,8 +1360,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
-   * your serializable in the {@link SimplixSerializer} before.
+   * Method to deserialize a class using the {@link SimplixSerializerManager}. You will need to register
+   * your serializable in the {@link SimplixSerializerManager} before.
    *
    * @param key   The key your value should be associated with.
    * @param value The value you want to set in your data-structure.
@@ -1371,8 +1372,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
-   * your serializable in the {@link SimplixSerializer} before.
+   * Method to deserialize a class using the {@link SimplixSerializerManager}. You will need to register
+   * your serializable in the {@link SimplixSerializerManager} before.
    *
    * @param key   The key your value should be associated with.
    * @param value The value you want to set in your data-structure.
@@ -1380,7 +1381,7 @@ public interface DataStorage {
    */
   default <T> void setSerializableMapFiltered(@NotNull final String[] key, @NotNull final Map<String, T> value, @NotNull final Class<T> type) {
     try {
-      final Object data = SimplixSerializer.serializeMapFiltered(value, type);
+      final Object data = SimplixSerializerManager.serializeMapFiltered(value, type);
       set(key, data);
     } catch (final Throwable throwable) {
       throw SimplixProviders.exceptionHandler().create(
@@ -1392,8 +1393,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to deserialize a class using the {@link SimplixSerializer}. You will need to register
-   * your serializable in the {@link SimplixSerializer} before.
+   * Method to deserialize a class using the {@link SimplixSerializerManager}. You will need to register
+   * your serializable in the {@link SimplixSerializerManager} before.
    *
    * @param key   The key your value should be associated with.
    * @param value The value you want to set in your data-structure.
@@ -1404,8 +1405,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
-   * You will need to register your serializable in the {@link SimplixSerializer} before.
+   * Method to serialize a Class using the {@link SimplixSerializerManager}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializerManager} before.
    *
    * @return Serialized instance of class.
    */
@@ -1414,15 +1415,15 @@ public interface DataStorage {
     if (contains(key)) {
       final Object raw = get(key);
       if (raw != null) {
-        return SimplixSerializer.deserialize(raw, data, type);
+        return SimplixSerializerManager.deserialize(raw, data, type);
       }
     }
     return null;
   }
 
   /**
-   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
-   * You will need to register your serializable in the {@link SimplixSerializer} before.
+   * Method to serialize a Class using the {@link SimplixSerializerManager}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializerManager} before.
    *
    * @return Serialized instance of class.
    */
@@ -1431,15 +1432,15 @@ public interface DataStorage {
     if (contains(key)) {
       final Object raw = get(key);
       if (raw != null) {
-        return SimplixSerializer.deserialize(raw, type);
+        return SimplixSerializerManager.deserialize(raw, type);
       }
     }
     return null;
   }
 
   /**
-   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
-   * You will need to register your serializable in the {@link SimplixSerializer} before.
+   * Method to serialize a Class using the {@link SimplixSerializerManager}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializerManager} before.
    *
    * @return Serialized instance of class.
    */
@@ -1453,7 +1454,7 @@ public interface DataStorage {
     if (contains(key)) {
       final Object raw = get(key);
       if (raw != null) {
-        return SimplixSerializer.deserialize(raw, data, type);
+        return SimplixSerializerManager.deserialize(raw, data, type);
       }
     }
     return def;
@@ -1464,7 +1465,7 @@ public interface DataStorage {
     if (contains(key)) {
       final Object raw = get(key);
       if (raw != null) {
-        return SimplixSerializer.deserialize(raw, type);
+        return SimplixSerializerManager.deserialize(raw, type);
       }
     }
     return def;
@@ -1476,8 +1477,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
-   * You will need to register your serializable in the {@link SimplixSerializer} before.
+   * Method to serialize a Class using the {@link SimplixSerializerManager}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializerManager} before.
    *
    * @return Serialized instance of class.
    * @throws NullPointerException if no serializer for the given class is found
@@ -1488,15 +1489,15 @@ public interface DataStorage {
     if (contains(key)) {
       final Object raw = get(key);
       if (raw != null) {
-        return Optional.of(SimplixSerializer.deserialize(raw, data, type));
+        return Optional.of(SimplixSerializerManager.deserialize(raw, data, type));
       }
     }
     return Optional.empty();
   }
 
   /**
-   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
-   * You will need to register your serializable in the {@link SimplixSerializer} before.
+   * Method to serialize a Class using the {@link SimplixSerializerManager}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializerManager} before.
    *
    * @return Serialized instance of class.
    * @throws NullPointerException if no serializer for the given class is found
@@ -1507,15 +1508,15 @@ public interface DataStorage {
     if (contains(key)) {
       final Object raw = get(key);
       if (raw != null) {
-        return Optional.of(SimplixSerializer.deserialize(raw, type));
+        return Optional.of(SimplixSerializerManager.deserialize(raw, type));
       }
     }
     return Optional.empty();
   }
 
   /**
-   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
-   * You will need to register your serializable in the {@link SimplixSerializer} before.
+   * Method to serialize a Class using the {@link SimplixSerializerManager}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializerManager} before.
    *
    * @return Serialized instance of class.
    * @throws NullPointerException if no serializer for the given class is found
@@ -1529,13 +1530,13 @@ public interface DataStorage {
   @NotNull
   default <T> List<T> getSerializableList(final String[] key, final Object data, final Class<T> type) {
     final List<?> rawList = getList(key);
-    return SimplixSerializer.deserializeList(rawList, data, type);
+    return SimplixSerializerManager.deserializeList(rawList, data, type);
   }
 
   @NotNull
   default <T> List<T> getSerializableList(final String[] key, final Class<T> type) {
     final List<?> rawList = getList(key);
-    return SimplixSerializer.deserializeList(rawList, type);
+    return SimplixSerializerManager.deserializeList(rawList, type);
   }
 
   @NotNull
@@ -1546,13 +1547,13 @@ public interface DataStorage {
   @NotNull
   default <T> List<T> getSerializableListFiltered(final String[] key, final Object data, final Class<T> type) {
     final List<?> rawList = getList(key);
-    return SimplixSerializer.deserializeListFiltered(rawList, data, type);
+    return SimplixSerializerManager.deserializeListFiltered(rawList, data, type);
   }
 
   @NotNull
   default <T> List<T> getSerializableListFiltered(final String[] key, final Class<T> type) {
     final List<?> rawList = getList(key);
-    return SimplixSerializer.deserializeListFiltered(rawList, type);
+    return SimplixSerializerManager.deserializeListFiltered(rawList, type);
   }
 
   @NotNull
@@ -1563,13 +1564,13 @@ public interface DataStorage {
   @NotNull
   default <T> Map<String, T> getSerializableMap(final String[] key, final Object data, final Class<T> type) {
     final Map<?, ?> rawMap = getMap(key);
-    return SimplixSerializer.deserializeMap(rawMap, data, type);
+    return SimplixSerializerManager.deserializeMap(rawMap, data, type);
   }
 
   @NotNull
   default <T> Map<String, T> getSerializableMap(final String[] key, final Class<T> type) {
     final Map<?, ?> rawMap = getMap(key);
-    return SimplixSerializer.deserializeMap(rawMap, type);
+    return SimplixSerializerManager.deserializeMap(rawMap, type);
   }
 
   @NotNull
@@ -1580,13 +1581,13 @@ public interface DataStorage {
   @NotNull
   default <T> Map<String, T> getSerializableMapFiltered(final String[] key, final Object data, final Class<T> type) {
     final Map<?, ?> rawMap = getMap(key);
-    return SimplixSerializer.deserializeMapFiltered(rawMap, data, type);
+    return SimplixSerializerManager.deserializeMapFiltered(rawMap, data, type);
   }
 
   @NotNull
   default <T> Map<String, T> getSerializableMapFiltered(final String[] key, final Class<T> type) {
     final Map<?, ?> rawMap = getMap(key);
-    return SimplixSerializer.deserializeMapFiltered(rawMap, type);
+    return SimplixSerializerManager.deserializeMapFiltered(rawMap, type);
   }
 
   @NotNull
@@ -1679,8 +1680,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
-   * You will need to register your serializable in the {@link SimplixSerializer} before.<br>
+   * Method to serialize a Class using the {@link SimplixSerializerManager}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializerManager} before.<br>
    * If the key doesn't yet exist, it will be created in the data-structure, set to def and afterward returned.
    *
    * @return Serialized instance of class.
@@ -1690,7 +1691,7 @@ public interface DataStorage {
     if (contains(key)) {
       Object raw = get(key);
       if (raw != null) {
-        return SimplixSerializer.deserialize(raw, data, type);
+        return SimplixSerializerManager.deserialize(raw, data, type);
       }
     }
     setSerializable(key, def, type);
@@ -1698,8 +1699,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
-   * You will need to register your serializable in the {@link SimplixSerializer} before.<br>
+   * Method to serialize a Class using the {@link SimplixSerializerManager}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializerManager} before.<br>
    * If the key doesn't yet exist, it will be created in the data-structure, set to def and afterward returned.
    *
    * @return Serialized instance of class.
@@ -1709,7 +1710,7 @@ public interface DataStorage {
     if (contains(key)) {
       Object raw = get(key);
       if (raw != null) {
-        return SimplixSerializer.deserialize(raw, type);
+        return SimplixSerializerManager.deserialize(raw, type);
       }
     }
     setSerializable(key, def, type);
@@ -1717,8 +1718,8 @@ public interface DataStorage {
   }
 
   /**
-   * Method to serialize a Class using the {@link SimplixSerializer}.<br>
-   * You will need to register your serializable in the {@link SimplixSerializer} before.<br>
+   * Method to serialize a Class using the {@link SimplixSerializerManager}.<br>
+   * You will need to register your serializable in the {@link SimplixSerializerManager} before.<br>
    * If the key doesn't yet exist, it will be created in the data-structure, set to def and afterward returned.
    *
    * @return Serialized instance of class.

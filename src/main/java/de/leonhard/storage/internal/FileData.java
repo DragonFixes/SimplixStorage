@@ -1,6 +1,6 @@
 package de.leonhard.storage.internal;
 
-import de.leonhard.storage.internal.serialize.SimplixSerializer;
+import de.leonhard.storage.internal.serialize.SimplixSerializerManager;
 import de.leonhard.storage.internal.settings.DataType;
 import de.leonhard.storage.util.JsonUtils;
 
@@ -148,7 +148,7 @@ public class FileData {
    * @param value the value to be assigned to the key.
    */
   public synchronized <T> void insertSerializable(final String[] key, final T value, final Class<T> type) {
-    insert(key, SimplixSerializer.serialize(value, type));
+    insert(key, SimplixSerializerManager.serialize(value, type));
   }
 
   /**
@@ -168,7 +168,7 @@ public class FileData {
    * @param value the value to be assigned to the key.
    */
   public synchronized <T> void insertSerializableList(final String[] key, final List<T> value, final Class<T> type) {
-    insert(key, SimplixSerializer.serializeList(value, type));
+    insert(key, SimplixSerializerManager.serializeList(value, type));
   }
 
   /**
@@ -188,7 +188,7 @@ public class FileData {
    * @param value the value to be assigned to the key.
    */
   public synchronized <T> void insertSerializableMap(final String[] key, final Map<String, T> value, final Class<T> type) {
-    insert(key, SimplixSerializer.serializeMap(value, type));
+    insert(key, SimplixSerializerManager.serializeMap(value, type));
   }
 
   /**

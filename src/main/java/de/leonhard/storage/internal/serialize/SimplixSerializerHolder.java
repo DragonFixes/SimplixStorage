@@ -3,7 +3,7 @@ package de.leonhard.storage.internal.serialize;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface SimplixSerializable<T> {
+public interface SimplixSerializerHolder<T> {
 
   /**
    * Get our serializable from data in data-structure.
