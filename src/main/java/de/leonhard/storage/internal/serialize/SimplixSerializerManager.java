@@ -281,29 +281,75 @@ public class SimplixSerializerManager {
     return deserializeMapFiltered(raw, null, type);
   }
 
-  public static Map<String, ?> parseChildren(Map<String, ?> map) {
+  /**
+   * Resolves the map from the first layer of their content looking for serializable candidates.
+   *
+   * @param map The map to use
+   * @return The resolved map
+   */
+  public static Map<String, ?> resolveMapSingle(Map<String, ?> map) {
     Map<String, Object> sub = new HashMap<>();
     for (Map.Entry<String, ?> entry : map.entrySet()) {
-      sub.put(entry.getKey(), parseObject(entry.getValue()));
+      sub.put(entry.getKey(), resolveSingle(entry.getValue()));
     }
     return sub;
   }
 
-  public static List<?> parseChildren(List<?> list) {
+  /**
+   * Resolves the map and all their content, looking for serializable candidates.
+   *
+   * @param map The map to use
+   * @return The resolved map
+   */
+  public static Map<String, ?> resolveMapAll(Map<String, ?> map) {
+    Map<String, Object> sub = new HashMap<>();
+    for (Map.Entry<String, ?> entry : map.entrySet()) {
+      sub.put(entry.getKey(), resolveSingle(entry.getValue()));
+    }
+    return sub;
+  }
+
+  /**
+   * Resolves the list from the first layer of their content looking for serializable candidates.
+   *
+   * @param list The list to use
+   * @return The resolved list
+   */
+  public static List<?> resolveListSingle(List<?> list) {
     List<Object> sub = new ArrayList<>();
     for (Object o : list) {
-      sub.add(parseObject(o));
+      sub.add(resolveSingle(o));
     }
     return sub;
   }
 
-  public static Object parseObject(Object o) {
+  /**
+   * Resolves the list and all their content, looking for serializable candidates.
+   *
+   * @param list The list to use
+   * @return The resolved list
+   */
+  public static List<?> resolveListAll(List<?> list) {
+    List<Object> sub = new ArrayList<>();
+    for (Object o : list) {
+      sub.add(resolveSingle(o));
+    }
+    return sub;
+  }
+
+  /**
+   * Resolves the object and the first layer of their content (if applicable), looking for serializable candidates.
+   *
+   * @param o The object to use
+   * @return The resolved object
+   */
+  public static Object resolveSingle(Object o) {
     if (o instanceof SimplixSerializableLike s) {
       return s.serialized();
     } else if (o instanceof Iterable i) {
       List<Object> list = new ArrayList<>();
       for (Object s : i) {
-        list.add(parseObject(s));
+        list.add(resolveSingle(s));
       }
       return list;
     } else if (o instanceof Map m) {
@@ -311,7 +357,35 @@ public class SimplixSerializerManager {
       Map<String, Object> map = new HashMap<>();
 
       for (Map.Entry<String, Object> entry : subMap.entrySet()) {
-        map.put(entry.getKey(), parseObject(entry.getValue()));
+        map.put(entry.getKey(), resolveSingle(entry.getValue()));
+      }
+      return map;
+    } else {
+      return o;
+    }
+  }
+
+  /**
+   * Resolves the object and all their content (if applicable), looking for serializable candidates.
+   *
+   * @param o The object to use
+   * @return The resolved object
+   */
+  public static Object resolveAll(Object o) {
+    if (o instanceof SimplixSerializableLike s) {
+      return resolveAll(s.serialized());
+    } else if (o instanceof Iterable i) {
+      List<Object> list = new ArrayList<>();
+      for (Object s : i) {
+        list.add(resolveAll(s));
+      }
+      return list;
+    } else if (o instanceof Map m) {
+      Map<String, Object> subMap = m;
+      Map<String, Object> map = new HashMap<>();
+
+      for (Map.Entry<String, Object> entry : subMap.entrySet()) {
+        map.put(entry.getKey(), resolveAll(entry.getValue()));
       }
       return map;
     } else {

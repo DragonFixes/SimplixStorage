@@ -2,8 +2,8 @@ package de.leonhard.storage.util;
 
 import de.leonhard.storage.internal.DataStorage;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 import lombok.experimental.UtilityClass;
 import lombok.val;
 
@@ -12,12 +12,327 @@ import lombok.val;
 public class ClassWrapper {
 
   /**
-   * Method to cast an object to a given datatype Used for example in {@link DataStorage} to cast
-   * the results of get() to for example a String
+   * Method to map the contents with a function.
+   *
+   * @param map   Map to use
+   * @param key   Mapper for the keys
+   * @param value Mapper for the values
+   * @return Map with mapped content
+   */
+  public <K, V> Map<K, V> getMapFromTypeMapper(final Map<String, ?> map, final Function<Object, K> key, final Function<Object, V> value) {
+    final Map<K, V> re = new HashMap<>();
+    for (Map.Entry<String, ?> e : map.entrySet()) {
+      re.put(key.apply(e.getKey()), value.apply(e.getValue()));
+    }
+    return re;
+  }
+
+  /**
+   * Method to map the contents with a function.
+   *
+   * @param map   Map to use
+   * @param key   Mapper for the keys
+   * @param value Mapper for the values
+   * @return Map with mapped content
+   */
+  public <K, V> Map<K, V> getMapFromTypeMapperStr(final Map<String, ?> map, final Function<String, K> key, final Function<Object, V> value) {
+    final Map<K, V> re = new HashMap<>();
+    for (Map.Entry<String, ?> e : map.entrySet()) {
+      re.put(key.apply(e.getKey()), value.apply(e.getValue()));
+    }
+    return re;
+  }
+
+  /**
+   * Method to map the contents to the given datatypes.
+   *
+   * @param map   Map to use
+   * @param key   Type of key
+   * @param value Type of value
+   * @return Map with mapped content
+   */
+  public <K, V> Map<K, V> getMapFromType(final Map<String, ?> map, final K key, final V value) {
+    return getMapFromTypeMapper(map, getFunction(key), getFunction(value));
+  }
+
+  /**
+   * Method to map the contents to the given datatypes.
+   *
+   * @param map   Map to use
+   * @param key   Class of key
+   * @param value Class of value
+   * @return Map with mapped content
+   */
+  public <K, V> Map<K, V> getMapFromType(final Map<String, ?> map, final Class<K> key, final Class<V> value) {
+    return getMapFromTypeMapper(map, getFunction(key), getFunction(value));
+  }
+
+  /**
+   * Method to map the keys with a function, and the values to a given datatype.
+   *
+   * @param map    Map to use
+   * @param mapper Mapper for the keys
+   * @param value  Type of value
+   * @return Map with mapped content
+   */
+  public <K, V> Map<K, V> getMapFromType(final Map<String, ?> map, final Function<String, K> mapper, final V value) {
+    return getMapFromTypeMapperStr(map, mapper, getFunction(value));
+  }
+
+  /**
+   * Method to map the keys with a function, and the values to a given datatype.
+   *
+   * @param map    Map to use
+   * @param mapper Mapper for the keys
+   * @param clazz  Class of value
+   * @return Map with mapped content
+   */
+  public <K, V> Map<K, V> getMapFromType(final Map<String, ?> map, final Function<String, K> mapper, final Class<V> clazz) {
+    return getMapFromTypeMapperStr(map, mapper, getFunction(clazz));
+  }
+
+  /**
+   * Method to map the contents with a function.
+   *
+   * @param map    Map to use
+   * @param mapper Mapper for the values
+   * @return Map with mapped content
+   */
+  public <T> Map<String, T> getMapFromType(final Map<String, ?> map, final Function<Object, T> mapper) {
+    final Map<String, T> re = new HashMap<>();
+    for (Map.Entry<String, ?> e : map.entrySet()) {
+      re.put(e.getKey(), mapper.apply(e.getValue()));
+    }
+    return re;
+  }
+
+  /**
+   * Method to map the values to a given datatype.
+   *
+   * @param map  Map to use
+   * @param type Type of value
+   * @return Map with mapped content
+   */
+  public <T> Map<String, T> getMapFromType(final Map<String, ?> map, final T type) {
+    return getMapFromType(map, getFunction(type));
+  }
+
+  /**
+   * Method to map the values to a given datatype.
+   *
+   * @param map   Map to use
+   * @param clazz Class of value
+   * @return Map with mapped content
+   */
+  public <T> Map<String, T> getMapFromType(final Map<String, ?> map, final Class<T> clazz) {
+    return getMapFromType(map, getFunction(clazz));
+  }
+
+  /**
+   * Method to map the contents with a function, filtering out content that does not match.
+   *
+   * @param map   Map to cast
+   * @param key   Mapper for the keys
+   * @param value Mapper for the values
+   * @return Map with mapped content
+   */
+  public <K, V> Map<K, V> getMapFromTypeFilterMapper(final Map<String, ?> map, final Function<Object, K> key, final Function<Object, V> value) {
+    final Map<K, V> re = new HashMap<>();
+    for (Map.Entry<String, ?> e : map.entrySet()) {
+      try {
+        re.put(key.apply(e.getKey()), value.apply(e.getValue()));
+      } catch (ClassCastException ignored) {
+      }
+    }
+    return re;
+  }
+
+  /**
+   * Method to map the contents with a function, filtering out content that does not match.
+   *
+   * @param map   Map to cast
+   * @param key   Mapper for the keys
+   * @param value Mapper for the values
+   * @return Map with mapped content
+   */
+  public <K, V> Map<K, V> getMapFromTypeFilterMapperStr(final Map<String, ?> map, final Function<String, K> key, final Function<Object, V> value) {
+    final Map<K, V> re = new HashMap<>();
+    for (Map.Entry<String, ?> e : map.entrySet()) {
+      try {
+        re.put(key.apply(e.getKey()), value.apply(e.getValue()));
+      } catch (ClassCastException ignored) {
+      }
+    }
+    return re;
+  }
+
+  /**
+   * Method to map the keys with a function, and the values to a given datatype, filtering out content that does not match.
+   *
+   * @param map   Map to use
+   * @param key   Type of key
+   * @param value Type of value
+   * @return Map with mapped content
+   */
+  public <K, V> Map<K, V> getMapFromTypeFilter(final Map<String, ?> map, final K key, final V value) {
+    return getMapFromTypeFilterMapper(map, getFunction(key), getFunction(value));
+  }
+
+  /**
+   * Method to map the keys with a function, and the values to a given datatype, filtering out content that does not match.
+   *
+   * @param map   Map to use
+   * @param key   Type of key
+   * @param value Type of value
+   * @return Map with mapped content
+   */
+  public <K, V> Map<K, V> getMapFromTypeFilter(final Map<String, ?> map, final Class<K> key, final Class<V> value) {
+    return getMapFromTypeFilterMapper(map, getFunction(key), getFunction(value));
+  }
+
+  /**
+   * Method to map the keys with a function, and the values to a given datatype, filtering out content that does not match.
+   *
+   * @param map    Map to use
+   * @param mapper Mapper for the keys
+   * @param value  Type of value
+   * @return Map with mapped content
+   */
+  public <K, V> Map<K, V> getMapFromTypeFilter(final Map<String, ?> map, final Function<String, K> mapper, final V value) {
+    return getMapFromTypeFilterMapperStr(map, mapper, getFunction(value));
+  }
+
+  /**
+   * Method to map the keys with a function, and the values to a given datatype, filtering out content that does not match.
+   *
+   * @param map    Map to use
+   * @param mapper Mapper for the keys
+   * @param clazz  Class of value
+   * @return Map with mapped content
+   */
+  public <K, V> Map<K, V> getMapFromTypeFilter(final Map<String, ?> map, final Function<String, K> mapper, final Class<V> clazz) {
+    return getMapFromTypeFilterMapperStr(map, mapper, getFunction(clazz));
+  }
+
+  /**
+   * Method to map the values with a function, filtering out content that does not match.
+   *
+   * @param map    Map to use
+   * @param mapper Mapper for the values
+   * @return Map with mapped content
+   */
+  public <T> Map<String, T> getMapFromTypeFilter(final Map<String, ?> map, final Function<Object, T> mapper) {
+    final Map<String, T> re = new HashMap<>();
+    for (Map.Entry<String, ?> e : map.entrySet()) {
+      try {
+        re.put(e.getKey(), mapper.apply(e.getValue()));
+      } catch (ClassCastException ignored) {
+      }
+    }
+    return re;
+  }
+
+  /**
+   * Method to map the values to a given datatype, filtering out content that does not match.
+   *
+   * @param map  Map to use
+   * @param type Type of value
+   * @return Map with mapped content
+   */
+  public <T> Map<String, T> getMapFromTypeFilter(final Map<String, ?> map, final T type) {
+    return getMapFromTypeFilter(map, getFunction(type));
+  }
+
+  /**
+   * Method to map the values to a given datatype, filtering out content that does not match.
+   *
+   * @param map   Map to use
+   * @param clazz Class of value
+   * @return Map with mapped content
+   */
+  public <T> Map<String, T> getMapFromTypeFilter(final Map<String, ?> map, final Class<T> clazz) {
+    return getMapFromTypeFilter(map, getFunction(clazz));
+  }
+
+  /**
+   * Method to map the content of a list with a mapper.
+   *
+   * @param list   List to map
+   * @param mapper Mapper for the content
+   * @return List with mapped content
+   */
+  public <T> List<T> getListFromType(final List<?> list, final Function<Object, T> mapper) {
+    return list.stream().map(mapper).toList();
+  }
+
+  /**
+   * Method to map the content of a list to a given datatype.
+   *
+   * @param list List to map
+   * @param type Type of content
+   * @return List with mapped content
+   */
+  public <T> List<T> getListFromType(final List<?> list, final T type) {
+    return getListFromType(list, getFunction(type));
+  }
+
+  /**
+   * Method to map the content of a list to a given datatype.
+   *
+   * @param list  List to map
+   * @param clazz Class of content
+   * @return List with mapped content
+   */
+  public <T> List<T> getListFromType(final List<?> list, final Class<T> clazz) {
+    return getListFromType(list, getFunction(clazz));
+  }
+
+  /**
+   * Method to map the content of a list with a mapper, filtering out content that does not match.
+   *
+   * @param list   List to map
+   * @param mapper Mapper for the content
+   * @return List with mapped content
+   */
+  public <T> List<T> getListFromTypeFilter(final List<?> list, final Function<Object, T> mapper) {
+    return list.stream().map(o -> {
+      try {
+        return mapper.apply(o);
+      } catch (ClassCastException ignored) {
+        return null;
+      }
+    }).filter(Objects::nonNull).toList();
+  }
+
+  /**
+   * Method to map the content of a list to a given datatype, filtering out content that does not match.
+   *
+   * @param list List to map
+   * @param type Type of content
+   * @return List with mapped content
+   */
+  public <T> List<T> getListFromTypeFilter(final List<?> list, final T type) {
+    return getListFromTypeFilter(list, getFunction(type));
+  }
+
+  /**
+   * Method to map the content of a list to a given datatype, filtering out content that does not match.
+   *
+   * @param list  List to map
+   * @param clazz Class of content
+   * @return List with mapped content
+   */
+  public <T> List<T> getListFromTypeFilter(final List<?> list, final Class<T> clazz) {
+    return getListFromTypeFilter(list, getFunction(clazz));
+  }
+
+  /**
+   * Method to map an object to a given datatype.
+   * Used for example in {@link DataStorage} to map the results of get() to for example a String.
    *
    * @param obj Object to cast
-   * @param def type of result
-   * @return Casted object
+   * @param def Type of result
+   * @return Mapped object
    */
   public <T> T getFromDef(final Object obj, final T def) {
     if (def instanceof Integer) {
@@ -47,15 +362,14 @@ public class ClassWrapper {
   }
 
   /**
-   * Method to cast an object to a given datatype Used for example in {@link DataStorage} to cast
-   * the results of get() to for example a String
+   * Method to map an object to a given datatype.
+   * Used for example in {@link DataStorage} to map the results of get() to for example a String.
    *
    * @param obj   Object to cast
-   * @param clazz class of result
+   * @param clazz Class of result
    * @return Casted object
    */
   public <T> T getFromDef(final Object obj, final Class<T> clazz) {
-
     if (clazz == int.class || clazz == Integer.class) {
       return (T) INTEGER.getInt(obj);
     } else if (clazz == float.class || clazz == Float.class) {
@@ -80,6 +394,72 @@ public class ClassWrapper {
       return (T) BYTE.getByteArray(obj);
     }
     return (T) obj;
+  }
+
+  /**
+   * Method to get a function to map an object to a given datatype.
+   *
+   * @param def Type for the function
+   * @return Function to map the object
+   */
+  public <T> Function<Object, T> getFunction(final T def) {
+    if (def instanceof Integer) {
+      return o -> (T) INTEGER.getInt(o);
+    } else if (def instanceof Float) {
+      return o -> (T) FLOAT.getFloat(o);
+    } else if (def instanceof Double) {
+      return o -> (T) DOUBLE.getDouble(o);
+    } else if (def instanceof Long) {
+      return o -> (T) LONG.getLong(o);
+    } else if (def instanceof Boolean) {
+      return o -> (T) (Boolean) o.toString().equalsIgnoreCase("true");
+    } else if (def instanceof String[]) {
+      return o -> (T) STRING.getStringArray(o);
+    } else if (def instanceof Long[] || def instanceof long[]) {
+      return o -> (T) LONG.getLongArray(o);
+    } else if (def instanceof Double[] || def instanceof double[]) {
+      return o -> (T) DOUBLE.getDoubleArray(o);
+    } else if (def instanceof Float[] || def instanceof float[]) {
+      return o -> (T) FLOAT.getFloatArray(o);
+    } else if (def instanceof Short[] || def instanceof short[]) {
+      return o -> (T) SHORT.getShortArray(o);
+    } else if (def instanceof Byte[] || def instanceof byte[]) {
+      return o -> (T) BYTE.getByteArray(o);
+    }
+    return o -> (T) o;
+  }
+
+  /**
+   * Method to get a function to map an object to a given datatype.
+   *
+   * @param clazz Class for the function
+   * @return Function to map the object
+   */
+  public <T> Function<Object, T> getFunction(final Class<T> clazz) {
+    if (clazz == int.class || clazz == Integer.class) {
+      return o -> (T) INTEGER.getInt(o);
+    } else if (clazz == float.class || clazz == Float.class) {
+      return o -> (T) FLOAT.getFloat(o);
+    } else if (clazz == double.class || clazz == Double.class) {
+      return o -> (T) DOUBLE.getDouble(o);
+    } else if (clazz == long.class || clazz == Long.class) {
+      return o -> (T) LONG.getLong(o);
+    } else if (clazz == boolean.class || clazz == Boolean.class) {
+      return o -> (T) (Boolean) o.toString().equalsIgnoreCase("true");
+    } else if (clazz == String[].class) {
+      return o -> (T) STRING.getStringArray(o);
+    } else if (clazz == Double[].class || clazz == double[].class) {
+      return o -> (T) DOUBLE.getDoubleArray(o);
+    } else if (clazz == Float[].class || clazz == float[].class) {
+      return o -> (T) FLOAT.getFloatArray(o);
+    } else if (clazz == Integer[].class || clazz == int[].class) {
+      return o -> (T) INTEGER.getIntArray(o);
+    } else if (clazz == Short[].class || clazz == short[].class) {
+      return o -> (T) SHORT.getShortArray(o);
+    } else if (clazz == Byte[].class || clazz == byte[].class) {
+      return o -> (T) BYTE.getByteArray(o);
+    }
+    return o -> (T) o;
   }
 
   @UtilityClass
