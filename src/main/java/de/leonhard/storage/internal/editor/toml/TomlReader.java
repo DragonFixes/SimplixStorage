@@ -9,7 +9,7 @@ import java.util.*;
 /**
  * Class for reading TOML v0.4.0.
  *
- * <h1>DateTimes support</h1>
+ * # DateTimes support
  *
  * <p>The datetime support is more extended than in the TOML specification. This reader supports
  * three kind of datetimes:
@@ -25,7 +25,7 @@ import java.util.*;
  * example, 2015-03-20 is parsed as a {@link LocalDate}, 2015-03-20T19:04:35 as a {@link
  * LocalDateTime}, and 2015-03-20T19:04:35+01:00 as a {@link ZonedDateTime}.
  *
- * <h1>Lenient bare keys</h1>
+ * # Lenient bare keys
  *
  * <p>This library allows "lenient" bare keys by default, as opposite to the "strict" bare keys
  * required by the TOML specification. Strict bare keys may only contain letters, numbers,
@@ -47,7 +47,7 @@ public final class TomlReader {
    * Creates a new TomlReader.
    *
    * @param data                the TOML data to read
-   * @param strictAsciiBareKeys <code>true</false> to allow only strict bare keys,
+   * @param strictAsciiBareKeys <code>true</code> to allow only strict bare keys,
    *                            <code>false</code> to allow lenient
    *                            ones.
    */

@@ -10,7 +10,7 @@ import lombok.experimental.UtilityClass;
 
 /**
  * Interface for registering more powerful Map/List implementation than the default JDK one's
- * examples for these implementations are FastUtils & Trove Used in {@link
+ * examples for these implementations are FastUtils and Trove Used in {@link
  * de.leonhard.storage.internal.settings.DataType} Enum
  */
 @UtilityClass

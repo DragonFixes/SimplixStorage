@@ -15,13 +15,13 @@ import java.util.Map;
 /**
  * Class for writing TOML v0.4.0.
  *
- * <h1>DateTimes support</h1>
+ * # DateTimes support
  *
  * <p>Any {@link TemporalAccessor} may be added in a Map passed to this writer, this writer can
  * only write three kind of datetimes: {@link LocalDate}, {@link LocalDateTime} and {@link
  * ZonedDateTime}.
  *
- * <h1>Lenient bare keys</h1>
+ * # Lenient bare keys
  *
  * <p>The {@link TomlWriter} always outputs data that strictly follows the TOML specification. Any
  * key that contains one or more non-strictly valid character is surrounded by quotes.
@@ -84,14 +84,30 @@ public final class TomlWriter {
 
   private static void addEscaped(final StringBuilder stringBuilder, final char c) {
     switch (c) {
-      case '\b' -> stringBuilder.append("\\b");
-      case '\t' -> stringBuilder.append("\\t");
-      case '\n' -> stringBuilder.append("\\n");
-      case '\\' -> stringBuilder.append("\\\\");
-      case '\r' -> stringBuilder.append("\\r");
-      case '\f' -> stringBuilder.append("\\f");
-      case '"' -> stringBuilder.append("\\\"");
-      default -> stringBuilder.append(c);
+      case '\b':
+        stringBuilder.append("\\b");
+        break;
+      case '\t':
+        stringBuilder.append("\\t");
+        break;
+      case '\n':
+        stringBuilder.append("\\n");
+        break;
+      case '\\':
+        stringBuilder.append("\\\\");
+        break;
+      case '\r':
+        stringBuilder.append("\\r");
+        break;
+      case '\f':
+        stringBuilder.append("\\f");
+        break;
+      case '"':
+        stringBuilder.append("\\\"");
+        break;
+      default:
+        stringBuilder.append(c);
+        break;
     }
   }
 
@@ -151,7 +167,8 @@ public final class TomlWriter {
     for (final Map.Entry<String, Object> entry : table.entrySet()) {
       final String name = entry.getKey();
       final Object value = entry.getValue();
-      if (value instanceof Collection c) { // array
+      if (value instanceof Collection) { // array
+        final Collection<?> c = (Collection<?>) value;
         if (!c.isEmpty() && c.iterator().next() instanceof Map) { // array of tables
           if (simpleValues) {
             continue;
@@ -177,7 +194,8 @@ public final class TomlWriter {
           write(" = ");
           writeArray(c);
         }
-      } else if (value instanceof Object[] array) { // array
+      } else if (value instanceof Object[]) { // array
+        final Object[] array = (Object[]) value;
         if (array.length > 0 && array[0] instanceof Map) { // array of tables
           if (simpleValues) {
             continue;

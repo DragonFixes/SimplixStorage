@@ -189,7 +189,7 @@ public interface DataStorage {
    * Get a value or a default one
    *
    * @param key Path to value in data-structure
-   * @param def Default value & type of it
+   * @param def Default value and type of it
    * @see #getOrDefault(String[], Object)
    * @see #getRaw(String[], Object)
    * @see #getOrThrow(String[], Object)
@@ -202,7 +202,7 @@ public interface DataStorage {
    * Get a value or a default one
    *
    * @param key Path to value in data-structure
-   * @param def Default value & type of it
+   * @param def Default value and type of it
    * @see #getOrDefault(String, Object)
    * @see #getRaw(String, Object)
    * @see #getOrThrow(String, Object)
@@ -215,7 +215,7 @@ public interface DataStorage {
    * Get a value or throws an exception if it does not exist or another error occurs.
    *
    * @param key Path to value in data-structure
-   * @param def Default value & type of it
+   * @param def Default value and type of it
    * @throws SimplixValidationException if the returned value can not be found, cast or another error occurs
    * @see #getOrDefault(String[], Object)
    * @see #getRaw(String[], Object)
@@ -238,7 +238,7 @@ public interface DataStorage {
    * Get a value or throws an exception if it does not exist or another error occurs.
    *
    * @param key Path to value in data-structure
-   * @param def Default value & type of it
+   * @param def Default value and type of it
    * @throws SimplixValidationException if the returned value can not be found, cast or another error occurs
    * @see #getOrDefault(String[], Object)
    * @see #getRaw(String[], Object)
@@ -483,7 +483,7 @@ public interface DataStorage {
   }
 
   // ----------------------------------------------------------------------------------------------------
-  // Predefined getter for Strings & primitive types from data-structure
+  // Predefined getter for Strings and primitive types from data-structure
   // ----------------------------------------------------------------------------------------------------
 
   /**
@@ -2108,7 +2108,7 @@ public interface DataStorage {
   }
 
   /**
-   * Mix of setDefault & getDefault.
+   * Mix of setDefault and getDefault.
    * <p>Gets the value of the key in the data structure, casted to the type of the specified default def.
    * If the key doesn't yet exist, it will be created in the data-structure, set to def and afterward returned.</p>
    *
@@ -2127,7 +2127,7 @@ public interface DataStorage {
   }
 
   /**
-   * Mix of setDefault & getDefault.
+   * Mix of setDefault and getDefault.
    * <p>Gets the value of the key in the data structure, casted to the type of the specified default def.
    * If the key doesn't yet exist, it will be created in the data-structure, set to def and afterward returned.</p>
    *

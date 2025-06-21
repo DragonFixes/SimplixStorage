@@ -1,0 +1,73 @@
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '8.3.6' // for shadowing
+    id 'io.freefair.lombok' version '8.10.2'
+    id 'maven-publish'
+}
+
+group = 'com.github.dragonfixes'
+version = '3.3.0-beta.4'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+//    implementation 'me.nobeld:SimplixStorage:3.3.0-beta.3'
+    implementation 'com.esotericsoftware.yamlbeans:yamlbeans:1.17'
+    implementation 'org.json:json:20231013'
+    implementation 'org.jetbrains:annotations:22.0.0'
+    implementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+}
+
+shadowJar {
+    configurations = [project.configurations.implementation, project.configurations.shadow]
+    Map<String, String> relocations = [
+            'org.json': 'de.leonhard.storage.shaded.json',
+            'com.esotericsoftware': 'de.leonhard.storage.shaded.esotericsoftware',
+            'org.jetbrains': 'de.leonhard.storage.shaded.jetbrains',
+    ]
+    relocations.each { src, dest -> relocate src, dest }
+
+    exclude 'META-INF/**'
+    exclude '**/LICENSE'
+    exclude '**/README.md'
+    exclude '**/docs/**'
+
+    archiveFileName = "${project.name}-${project.version}.jar"
+}
+
+tasks.register('deploy', Copy) {
+    def deployDir = file(System.getenv('DEPLOY_DIR') ?: "$rootDir/deploy")
+    from shadowJar.archiveFile
+    into deployDir
+
+    doFirst {
+        println "Deploying to: $deployDir"
+        deployDir.mkdirs()
+        println "Generated JAR file: ${shadowJar.archiveFile.get()}"
+    }
+}
+
+tasks.named('deploy').configure {
+    dependsOn 'shadowJar', 'sourcesJar', 'javadocJar', 'jar'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+wrapper {
+    gradleVersion = '8.9'
+    distributionType = Wrapper.DistributionType.BIN
+}

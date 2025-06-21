@@ -25,7 +25,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Class for easier, more convenient & strait interaction with files
+ * Class for easier, more convenient and strait interaction with files
  */
 @UtilityClass
 public class FileUtils {

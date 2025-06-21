@@ -334,7 +334,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   }
 
   /**
-   * @return The data of our file as a Map<String, Object>
+   * @return The data of our file as a {@link Map<String, Object>} object.
    */
   public final Map<String, Object> getData() {
     if (shouldGetEmpty()) {

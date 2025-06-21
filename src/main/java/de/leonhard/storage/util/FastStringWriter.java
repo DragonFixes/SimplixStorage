@@ -27,8 +27,7 @@ public class FastStringWriter extends Writer {
   }
 
   /**
-   * Returns the content of the underlying StringBuilder, as a String. Equivalent to {@link
-   * #getStringBuilder()#toString()}.
+   * Returns the content of the underlying StringBuilder, as a String. Equivalent to {@link FastStringWriter#getStringBuilder}.
    *
    * @return the content of the underlying StringBuilder.
    */
