@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'com.gradleup.shadow' version '8.3.6' // for shadowing
     id 'io.freefair.lombok' version '8.10.2'
-    id 'maven-publish'
 }
 
 group = 'com.github.dragonfixes'
@@ -43,14 +42,6 @@ shadowJar {
     exclude '**/docs/**'
 
     archiveFileName = "${project.name}-${project.version}.jar"
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            from components.java
-        }
-    }
 }
 
 java {
