@@ -28,7 +28,6 @@ dependencies {
 }
 
 shadowJar {
-    configurations = [project.configurations.implementation, project.configurations.shadow]
     Map<String, String> relocations = [
             'org.json': 'de.leonhard.storage.shaded.json',
             'com.esotericsoftware': 'de.leonhard.storage.shaded.esotericsoftware',
@@ -42,6 +41,10 @@ shadowJar {
     exclude '**/docs/**'
 
     archiveFileName = "${project.name}-${project.version}.jar"
+}
+
+artifacts {
+    archives shadowJar
 }
 
 java {
