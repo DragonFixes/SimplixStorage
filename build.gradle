@@ -41,22 +41,6 @@ shadowJar {
     archiveFileName = "${project.name}-${project.version}.jar"
 }
 
-tasks.register('deploy', Copy) {
-    def deployDir = file(System.getenv('DEPLOY_DIR') ?: "$rootDir/deploy")
-    from shadowJar.archiveFile
-    into deployDir
-
-    doFirst {
-        println "Deploying to: $deployDir"
-        deployDir.mkdirs()
-        println "Generated JAR file: ${shadowJar.archiveFile.get()}"
-    }
-}
-
-tasks.named('deploy').configure {
-    dependsOn 'shadowJar', 'sourcesJar', 'javadocJar', 'jar'
-}
-
 publishing {
     publications {
         maven(MavenPublication) {
