@@ -19,9 +19,13 @@ repositories {
 dependencies {
 //    implementation 'me.nobeld:SimplixStorage:3.3.0-beta.3'
     implementation 'com.esotericsoftware.yamlbeans:yamlbeans:1.17'
+    shadow 'com.esotericsoftware.yamlbeans:yamlbeans:1.17'
     implementation 'org.json:json:20231013'
+    shadow 'org.json:json:20231013'
     implementation 'org.jetbrains:annotations:22.0.0'
+    shadow 'org.jetbrains:annotations:22.0.0'
     implementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    shadow 'org.junit.jupiter:junit-jupiter:5.10.0'
 }
 
 shadowJar {
