@@ -2,8 +2,6 @@ package de.leonhard.storage.internal.exception;
 
 import lombok.NonNull;
 
-import java.io.Serial;
-
 /**
  * Every exception which is thrown in LightningStorage internally extends this exception.
  * <p>
@@ -12,8 +10,8 @@ import java.io.Serial;
  */
 public class SimplixException extends RuntimeException {
 
-  @Serial
-  private static final long serialVersionUID = 4815788455395994435L;
+//  @Serial
+//  private static final long serialVersionUID = 4815788455395994435L;
 
   protected SimplixException(
       @NonNull final Throwable throwable,

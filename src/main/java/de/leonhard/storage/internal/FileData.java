@@ -455,7 +455,8 @@ public class FileData {
    */
   public int size(final String key) {
     Object o = get(key);
-    if (o instanceof Map map) {
+    if (o instanceof Map) {
+      Map<String, Object> map = (Map<String, Object>) o;
       return size(map);
     }
     return 0;
@@ -469,7 +470,8 @@ public class FileData {
    */
   public int size(final String[] key) {
     Object o = get(key);
-    if (o instanceof Map map) {
+    if (o instanceof Map) {
+      Map<String, Object> map = (Map<String, Object>) o;
       return size(map);
     }
     return 0;

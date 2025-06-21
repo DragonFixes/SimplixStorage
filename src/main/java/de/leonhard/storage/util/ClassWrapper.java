@@ -4,6 +4,8 @@ import de.leonhard.storage.internal.DataStorage;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import lombok.experimental.UtilityClass;
 import lombok.val;
 
@@ -262,7 +264,7 @@ public class ClassWrapper {
    * @return List with mapped content
    */
   public <T> List<T> getListFromType(final List<?> list, final Function<Object, T> mapper) {
-    return list.stream().map(mapper).toList();
+    return list.stream().map(mapper).collect(Collectors.toList());
   }
 
   /**
@@ -301,7 +303,7 @@ public class ClassWrapper {
       } catch (ClassCastException ignored) {
         return null;
       }
-    }).filter(Objects::nonNull).toList();
+    }).filter(Objects::nonNull).collect(Collectors.toList());
   }
 
   /**

@@ -3,6 +3,7 @@ package de.leonhard.storage.internal.serialize;
 import de.leonhard.storage.util.Valid;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
@@ -117,7 +118,8 @@ public class SimplixSerializerManager {
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
     try {
-      return raw.stream().map(o -> serializable.serialize(o)).toList();
+      return raw.stream().map(o -> serializable.serialize(o)).
+          collect(Collectors.toList());
     } catch (Exception e) {
       throw handleException(e);
     }
@@ -138,7 +140,8 @@ public class SimplixSerializerManager {
       } catch (Throwable e) {
         return null;
       }
-    }).filter(Objects::nonNull).toList();
+    }).filter(Objects::nonNull).
+        collect(Collectors.toList());
   }
 
   /**
@@ -151,7 +154,8 @@ public class SimplixSerializerManager {
             serializable,
             "No serializable found for '" + type.getSimpleName() + "'");
     try {
-      return raw.stream().map(o -> serializable.deserialize(o, data)).toList();
+      return raw.stream().map(o -> serializable.deserialize(o, data)).
+          collect(Collectors.toList());
     } catch (Exception e) {
       throw handleException(e);
     }
@@ -179,7 +183,7 @@ public class SimplixSerializerManager {
       } catch (Throwable e) {
         return null;
       }
-    }).filter(Objects::nonNull).toList();
+    }).filter(Objects::nonNull).collect(Collectors.toList());
   }
 
   /**
@@ -344,15 +348,18 @@ public class SimplixSerializerManager {
    * @return The resolved object
    */
   public static Object resolveSingle(Object o) {
-    if (o instanceof SimplixSerializableLike s) {
+    if (o instanceof SimplixSerializableLike) {
+      SimplixSerializableLike s = (SimplixSerializableLike) o;
       return s.serialized();
-    } else if (o instanceof Iterable i) {
+    } else if (o instanceof Iterable) {
+      Iterable<?> i = (Iterable<?>) o;
       List<Object> list = new ArrayList<>();
       for (Object s : i) {
         list.add(resolveSingle(s));
       }
       return list;
-    } else if (o instanceof Map m) {
+    } else if (o instanceof Map) {
+      Map m = (Map) o;
       Map<String, Object> subMap = m;
       Map<String, Object> map = new HashMap<>();
 
@@ -372,15 +379,18 @@ public class SimplixSerializerManager {
    * @return The resolved object
    */
   public static Object resolveAll(Object o) {
-    if (o instanceof SimplixSerializableLike s) {
+    if (o instanceof SimplixSerializableLike) {
+      SimplixSerializableLike s = (SimplixSerializableLike) o;
       return resolveAll(s.serialized());
-    } else if (o instanceof Iterable i) {
+    } else if (o instanceof Iterable) {
+      Iterable<?> i = (Iterable<?>) o;
       List<Object> list = new ArrayList<>();
       for (Object s : i) {
         list.add(resolveAll(s));
       }
       return list;
-    } else if (o instanceof Map m) {
+    } else if (o instanceof Map) {
+      Map m = (Map) o;
       Map<String, Object> subMap = m;
       Map<String, Object> map = new HashMap<>();
 

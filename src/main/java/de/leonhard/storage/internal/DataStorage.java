@@ -66,7 +66,8 @@ public interface DataStorage {
     if (sub != null) {
       if (sub) setRaw(key, SimplixSerializerManager.resolveAll(value));
       else setRaw(key, SimplixSerializerManager.resolveSingle(value));
-    } else if (value instanceof SimplixSerializableLike s) {
+    } else if (value instanceof SimplixSerializableLike) {
+      SimplixSerializableLike s = (SimplixSerializableLike) value;
       setRaw(key, s.serialized());
     } else {
       setRaw(key, value);
@@ -790,7 +791,7 @@ public interface DataStorage {
   @NotNull
   default <T> List<T> getMappedList(final String[] key, final Function<Object, T> mapper) {
     final Object raw = get(key);
-    return raw == null ? new ArrayList<>() : ClassWrapper.getFromDef(raw, new ArrayList<>()).stream().map(mapper).toList();
+    return raw == null ? new ArrayList<>() : ClassWrapper.getFromDef(raw, new ArrayList<>()).stream().map(mapper).collect(Collectors.toList());
   }
 
   /**
@@ -815,7 +816,7 @@ public interface DataStorage {
   @NotNull
   default <T> List<T> getMappedListFiltered(final String[] key, final Function<Object, T> mapper) {
     final Object raw = get(key);
-    return raw == null ? new ArrayList<>() : ClassWrapper.getFromDef(raw, new ArrayList<>()).stream().map(mapper).filter(Objects::nonNull).toList();
+    return raw == null ? new ArrayList<>() : ClassWrapper.getFromDef(raw, new ArrayList<>()).stream().map(mapper).filter(Objects::nonNull).collect(Collectors.toList());
   }
 
   /**
@@ -840,7 +841,7 @@ public interface DataStorage {
   @NotNull
   default <T> List<T> getStringMappedList(final String[] key, final Function<String, T> mapper) {
     final Object raw = get(key);
-    return raw == null ? new ArrayList<>() : ClassWrapper.getFromDef(raw, new ArrayList<String>()).stream().map(mapper).toList();
+    return raw == null ? new ArrayList<>() : ClassWrapper.getFromDef(raw, new ArrayList<String>()).stream().map(mapper).collect(Collectors.toList());
   }
 
   /**
@@ -867,7 +868,7 @@ public interface DataStorage {
   @NotNull
   default <T> List<T> getStringMappedListFiltered(final String[] key, final Function<String, T> mapper) {
     final Object raw = get(key);
-    return raw == null ? new ArrayList<>() : ClassWrapper.getFromDef(raw, new ArrayList<String>()).stream().map(mapper).filter(Objects::nonNull).toList();
+    return raw == null ? new ArrayList<>() : ClassWrapper.getFromDef(raw, new ArrayList<String>()).stream().map(mapper).filter(Objects::nonNull).collect(Collectors.toList());
   }
 
   /**
@@ -1266,8 +1267,8 @@ public interface DataStorage {
    */
   @NotNull
   default <E extends Enum<E>> E getEnum(
-      final String key,
-      final Class<E> enumType) {
+          final String key,
+          final Class<E> enumType) {
     return getEnum(splitPath(key), enumType);
   }
 

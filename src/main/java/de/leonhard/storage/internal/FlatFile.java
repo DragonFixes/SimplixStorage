@@ -334,7 +334,7 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   }
 
   /**
-   * @return The data of our file as a {@link Map<String, Object>} object.
+   * @return The data of our file as a {@link Map} object.
    */
   public final Map<String, Object> getData() {
     if (shouldGetEmpty()) {
@@ -476,27 +476,32 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
 
       if (errorLock) {
         switch (errorHandler) {
-          case KEEP_OR_EMPTY, EMPTY -> shouldModify = false; // disallows modify file data
-          case KEEP_OR_CLEAR -> {
+          case KEEP_OR_EMPTY:
+          case EMPTY:
+            shouldModify = false; // disallows modify file data
+            break;
+          case KEEP_OR_CLEAR:
             if (fileData == null) {
               errorLock = false; // restores to clear
             } else {
               shouldModify = false; // disallows modify file data
             }
-          }
-          case KEEP_OR_THROW -> {
+            break;
+          case KEEP_OR_THROW:
             shouldModify = false; // disallows modifications
             if (fileData == null) shouldThrow = true; // throws if no data exists
-          }
-          case ROLLBACK -> {
+            break;
+          case ROLLBACK:
             if (fileData == null) {
               shouldThrow = true; // throws if no data exists
             } else {
               out = this.fileData.toMap(); // returns old config
               errorLock = false;
             }
-          }
-          case CLEAR -> errorLock = false; // restores to clear
+            break;
+          case CLEAR:
+            errorLock = false; // restores to clear
+            break;
         }
       }
 
@@ -544,11 +549,14 @@ public abstract class FlatFile implements DataStorage, Comparable<FlatFile> {
   // Should the file be re-read before the next get() operation?
   // Can be used as utility method for implementations of FlatFile
   protected boolean shouldReload() {
-      return switch (this.reloadSettings) {
-          case AUTOMATICALLY -> true;
-          case INTELLIGENT -> FileUtils.hasChanged(this.file, this.lastLoaded);
-          default -> false;
-      };
+      switch (this.reloadSettings) {
+        case AUTOMATICALLY:
+          return true;
+        case INTELLIGENT:
+          return FileUtils.hasChanged(this.file, this.lastLoaded);
+        default:
+          return false;
+      }
   }
 
   // ----------------------------------------------------------------------------------------------------
