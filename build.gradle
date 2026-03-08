@@ -5,8 +5,8 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'com.github.dragonfixes'
-version = '3.3.0-beta.4'
+group = 'gg.drak'
+version = '3.4.0'
 
 java.sourceCompatibility = JavaVersion.VERSION_11
 java.targetCompatibility = JavaVersion.VERSION_11
